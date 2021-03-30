@@ -34,7 +34,7 @@ class TSP(object):
     #        #need to be changed
 
     # rongkai's get_cost for rejection
-    def get_costs(dataset, pi, c, t):
+    def get_costs(dataset, pi, c, t, beta=100):
         # Check that tours are valid, i.e. contain 0 to n -1
         #        assert (
         #            torch.arange(pi.size(1), out=pi.data.new()).view(1, -1).expand_as(pi) ==
@@ -61,7 +61,7 @@ class TSP(object):
         # print(torch.sum(rejectionrate))
         # print("rejectionrate:{rate}".format(rate=torch.mean(rejectionrate)))
         # print("length:{length}".format(length=torch.mean(t + (d[:, 0, 0:2] - d[:, -1, 0:2]).norm(p=2, dim=1))))
-        return rejectionrate * 100 + t + (d[:, 0, 0:2] - d[:, -1, 0:2]).norm(p=2, dim=1), None, rejectionrate, t + (
+        return rejectionrate * beta + t + (d[:, 0, 0:2] - d[:, -1, 0:2]).norm(p=2, dim=1), None, rejectionrate, t + (
                     d[:, 0, 0:2] - d[:, -1, 0:2]).norm(p=2, dim=1)
 
     #####

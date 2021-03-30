@@ -113,13 +113,13 @@ def action_greedy(pi):
     return action
 
 
-def test_learned_model(data, model):
+def test_learned_model(data, model, beta):
     with torch.no_grad():
-        cost, _, rej, length = model(data)
+        cost, _, rej, length = model(data, beta=beta)
     return cost.item(), rej.item(), length.item()
 
 
-def get_reward(action, data, n_agent, validation_model):
+def get_reward(action, data, n_agent, validation_model, beta):
 
     subtour_max_cost = [0 for _ in range(data.shape[0])]
     # log average rej.rate for batch
@@ -146,7 +146,8 @@ def get_reward(action, data, n_agent, validation_model):
             else:  # if sub-tour is not null, then evaluate it with pretrained model
                 sub_tour_cost, rej, length = test_learned_model(torch.tensor(instance, device=data.device,
                                                                              dtype=torch.float).unsqueeze(0),
-                                                                validation_model)
+                                                                validation_model,
+                                                                beta=beta)
             if sub_tour_cost >= subtour_max_cost[k]:
                 subtour_max_cost[k] = sub_tour_cost
                 # log rej.rate

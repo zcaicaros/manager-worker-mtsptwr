@@ -11,7 +11,7 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
 
-def test(model, dataset, inner_model, assgn_type, cluster_type, show_cluster, no_agent, device):
+def test(model, dataset, inner_model, assgn_type, cluster_type, show_cluster, no_agent, beta, device):
     # to batch graph
     adj = torch.ones([dataset.shape[0], dataset.shape[1], dataset.shape[1]])  # adjacent matrix fully connected
     data_list = [Data(x=dataset[i], edge_index=torch.nonzero(adj[i], as_tuple=False).t(), as_tuple=False) for i in range(dataset.shape[0])]
@@ -73,7 +73,7 @@ def test(model, dataset, inner_model, assgn_type, cluster_type, show_cluster, no
 
     # get reward for each instance
     assert action is not None
-    reward_, rej_, length_ = get_reward(action, data.to(device), no_agent, inner_model)  # reward: tensor [batch, 1]
+    reward_, rej_, length_ = get_reward(action, data.to(device), no_agent, inner_model, beta=beta)  # reward: tensor [batch, 1]
 
     # count assignment for each vehicle
     counts = []
@@ -88,17 +88,17 @@ if __name__ == '__main__':
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(1)  # 1
 
-    n_vehicles = 10
-    manager_size = [50, n_vehicles]
+    n_vehicles = 5
+    manager_size = [100, n_vehicles]
     sh_or_mh = 'MH'
     GIN_dim = 32
-    # n_nodes = [50, 100, 150, 200, 300, 400, 500]
-    n_nodes = [50]
+    n_nodes = [50, 100, 150, 200, 300, 400, 500]
+    # n_nodes = [50]
     batch_size = 100
     beta = 100
     assignment_type = 'greedy'  # 'sampling', 'greedy', or 'k-means'
     k_means_cluster_type = 'spacial'  # 'temporal+spacial', or 'spacial'
-    show_cluster = True
+    show_cluster = False
 
     # load net
     policy = Policy(vehicle_embd_type=sh_or_mh, in_chnl=4, hid_chnl=GIN_dim, n_agent=n_vehicles, key_size_embd=64,
@@ -148,7 +148,7 @@ if __name__ == '__main__':
             data = testing_data[j].unsqueeze(0)
 
             # testing
-            obj, rej, length, cts, assign = test(policy, data, validation_net, assignment_type, k_means_cluster_type, show_cluster, n_vehicles, dev)
+            obj, rej, length, cts, assign = test(policy, data, validation_net, assignment_type, k_means_cluster_type, show_cluster, n_vehicles, beta, dev)
             objs.append(obj)
             rejs.append(rej)
             lengths.append(length)
