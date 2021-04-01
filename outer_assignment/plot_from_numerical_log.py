@@ -165,7 +165,7 @@ else:
         plt.plot(x, rej[4], 'k', color='tab:purple', label='n=' + str(n_set[2]) + ' m=' + str(m_set[0]))
         plt.plot(x, rej[5], 'k', color='tab:orange', label='n=' + str(n_set[2]) + ' m=' + str(m_set[1]))
         plt.tight_layout()
-        plt.legend()
+        plt.legend(fontsize=20)
         plt.savefig('../paper_figure/{}.pdf'.format('vali_rej_all_in_one'), dpi=100)
         plt.show()
 
@@ -182,7 +182,7 @@ else:
         plt.plot(x, length[3], 'k', color='tab:green', label='n=' + str(n_set[1]) + ' m=' + str(m_set[1]))
         plt.plot(x, length[4], 'k', color='tab:purple', label='n=' + str(n_set[2]) + ' m=' + str(m_set[0]))
         plt.plot(x, length[5], 'k', color='tab:orange', label='n=' + str(n_set[2]) + ' m=' + str(m_set[1]))
-        plt.legend()
+        plt.legend(fontsize=20)
         plt.savefig('../paper_figure/{}.pdf'.format('vali_len_all_in_one'), dpi=100)
         plt.show()
 
@@ -199,7 +199,7 @@ else:
         plt.plot(x, cost[3], 'k', color='tab:green', label='n=' + str(n_set[1]) + ' m=' + str(m_set[1]))
         plt.plot(x, cost[4], 'k', color='tab:purple', label='n=' + str(n_set[2]) + ' m=' + str(m_set[0]))
         plt.plot(x, cost[5], 'k', color='tab:orange', label='n=' + str(n_set[2]) + ' m=' + str(m_set[1]))
-        plt.legend()
+        plt.legend(fontsize=20)
         plt.savefig('../paper_figure/{}.pdf'.format('vali_cost_all_in_one'), dpi=100)
         plt.show()
     else:
@@ -221,7 +221,7 @@ else:
         plt.plot(x, rej[4], 'k', color='tab:purple', label='n=' + str(n_set[2]) + ' m=' + str(m_set[0]))
         plt.plot(x, rej[5], 'k', color='tab:orange', label='n=' + str(n_set[2]) + ' m=' + str(m_set[1]))
         plt.tight_layout()
-        plt.legend()
+        plt.legend(fontsize=20)
         plt.savefig('../paper_figure/{}.pdf'.format('train_rej_all_in_one'), dpi=100)
         plt.show()
 
@@ -238,7 +238,7 @@ else:
         plt.plot(x, length[4], 'k', color='tab:purple', label='n=' + str(n_set[2]) + ' m=' + str(m_set[0]))
         plt.plot(x, length[5], 'k', color='tab:orange', label='n=' + str(n_set[2]) + ' m=' + str(m_set[1]))
         plt.tight_layout()
-        plt.legend()
+        plt.legend(fontsize=20)
         plt.savefig('../paper_figure/{}.pdf'.format('train_len_all_in_one'), dpi=100)
         plt.show()
 
@@ -255,6 +255,6 @@ else:
         plt.plot(x, cost[4], 'k', color='tab:purple', label='n=' + str(n_set[2]) + ' m=' + str(m_set[0]))
         plt.plot(x, cost[5], 'k', color='tab:orange', label='n=' + str(n_set[2]) + ' m=' + str(m_set[1]))
         plt.tight_layout()
-        plt.legend()
+        plt.legend(fontsize=20)
         plt.savefig('../paper_figure/{}.pdf'.format('train_cost_all_in_one'), dpi=100)
         plt.show()
