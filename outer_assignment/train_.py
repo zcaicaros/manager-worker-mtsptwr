@@ -93,8 +93,8 @@ if __name__ == '__main__':
     batch_size = 128
     lr = 1e-4
     iteration = 10000
-    sh_or_mh = 'MH'
-    node_mebd_type = 'mlp'
+    sh_or_mh = 'MH'  # 'MH'-MultiHead, 'SH'-SingleHead
+    node_mebd_type = 'gin'  # 'mlp', 'gin'
     GIN_dim = 32
     beta = 100
 

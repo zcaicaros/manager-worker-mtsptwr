@@ -54,7 +54,7 @@ class GIN_embedding(torch.nn.Module):
         # node_pool_over_layer += h
         # hidden_rep.append(h)
 
-        print(h.shape)
+        print(node_pool_over_layer.shape)
 
         gPool_over_layer = 0
         # Graph pool
