@@ -1,4 +1,4 @@
-from gin_ import Net
+from gin_ import GIN_embedding, MLP_embedding
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -30,14 +30,18 @@ class Agentembedding(nn.Module):
 
 
 class AgentAndNode_embedding(torch.nn.Module):
-    def __init__(self, vehicle_embd_type, in_chnl, hid_chnl, n_agent, key_size, value_size, dev):
+    def __init__(self, vehicle_embd_type, in_chnl, hid_chnl, n_agent, key_size, value_size, dev, node_embedding_type='gin'):
         super(AgentAndNode_embedding, self).__init__()
 
         self.n_agent = n_agent
         self.vehicle_embd_type = vehicle_embd_type
 
         # gin
-        self.gin = Net(in_chnl=in_chnl, hid_chnl=hid_chnl).to(dev)
+        if node_embedding_type == 'gin':
+            self.embedding_net = GIN_embedding(in_chnl=in_chnl, hid_chnl=hid_chnl).to(dev)
+        else:
+            # mlp
+            self.embedding_net = MLP_embedding(in_chnl=in_chnl, hid_chnl=hid_chnl).to(dev)
 
         if self.vehicle_embd_type == 'MH':
             self.agents = torch.nn.ModuleList()
@@ -51,7 +55,7 @@ class AgentAndNode_embedding(torch.nn.Module):
     def forward(self, batch_graphs, n_nodes, n_batch):
 
         # get node embedding using gin
-        nodes_h, g_h = self.gin(x=batch_graphs.x, edge_index=batch_graphs.edge_index, batch=batch_graphs.batch)
+        nodes_h, g_h = self.embedding_net(x=batch_graphs.x, edge_index=batch_graphs.edge_index, batch=batch_graphs.batch)
         nodes_h = nodes_h.reshape(n_batch, n_nodes, -1)
         g_h = g_h.reshape(n_batch, 1, -1)
 
@@ -77,7 +81,7 @@ class AgentAndNode_embedding(torch.nn.Module):
 
 
 class Policy(nn.Module):
-    def __init__(self, vehicle_embd_type, in_chnl, hid_chnl, n_agent, key_size_embd, key_size_policy, val_size, clipping, dev):
+    def __init__(self, vehicle_embd_type, node_embedding_type, in_chnl, hid_chnl, n_agent, key_size_embd, key_size_policy, val_size, clipping, dev):
         super(Policy, self).__init__()
         self.c = clipping
         self.key_size_policy = key_size_policy
@@ -86,7 +90,7 @@ class Policy(nn.Module):
 
         # embed network
         self.embed = AgentAndNode_embedding(vehicle_embd_type=vehicle_embd_type, in_chnl=in_chnl, hid_chnl=hid_chnl, n_agent=n_agent,
-                                            key_size=key_size_embd, value_size=val_size, dev=dev)
+                                            key_size=key_size_embd, value_size=val_size, dev=dev, node_embedding_type=node_embedding_type)
 
     def forward(self, batch_graph, n_nodes, n_batch):
 
@@ -175,7 +179,9 @@ if __name__ == '__main__':
     batch_graph = Batch.from_data_list(data_list=data_list).to(dev)
 
     # test policy
-    policy = Policy(in_chnl=fea.shape[-1], hid_chnl=32, n_agent=n_agent, key_size_embd=64,
+    policy = Policy(vehicle_embd_type='MH',
+                    node_embedding_type='gin',
+                    in_chnl=fea.shape[-1], hid_chnl=32, n_agent=n_agent, key_size_embd=64,
                     key_size_policy=64, val_size=64, clipping=10, dev=dev)
 
     pi = policy(batch_graph, n_nodes, n_batch)

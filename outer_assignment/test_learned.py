@@ -91,6 +91,7 @@ if __name__ == '__main__':
     n_vehicles = 10
     manager_size = [150, n_vehicles]
     sh_or_mh = 'MH'
+    node_embd_type = 'mlp'
     GIN_dim = 32
     n_nodes = [50, 100, 150, 200, 300, 400, 500]
     # n_nodes = [50]
@@ -101,7 +102,8 @@ if __name__ == '__main__':
     show_cluster = False
 
     # load net
-    policy = Policy(vehicle_embd_type=sh_or_mh, in_chnl=4, hid_chnl=GIN_dim, n_agent=n_vehicles, key_size_embd=64,
+    policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_embd_type,
+                    in_chnl=4, hid_chnl=GIN_dim, n_agent=n_vehicles, key_size_embd=64,
                     key_size_policy=64, val_size=64, clipping=10, dev=dev)
     path = '../pretrained_assgnmt_beta'+str(beta)+'/{}.pth'.format(str(manager_size[0]) + '_' + str(n_vehicles) + '_' + sh_or_mh + '_' + str(GIN_dim))
     # print(path)

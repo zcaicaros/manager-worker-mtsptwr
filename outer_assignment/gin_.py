@@ -5,9 +5,9 @@ from torch.nn import Sequential, Linear, ReLU
 from torch_geometric.nn import GINConv, global_mean_pool
 
 
-class Net(torch.nn.Module):
+class GIN_embedding(torch.nn.Module):
     def __init__(self, in_chnl, hid_chnl):
-        super(Net, self).__init__()
+        super(GIN_embedding, self).__init__()
 
         ## init projection
         # 1st mlp layer
@@ -54,6 +54,8 @@ class Net(torch.nn.Module):
         # node_pool_over_layer += h
         # hidden_rep.append(h)
 
+        print(h.shape)
+
         gPool_over_layer = 0
         # Graph pool
         for layer, layer_h in enumerate(hidden_rep):
@@ -62,5 +64,67 @@ class Net(torch.nn.Module):
                                           0.5,
                                           training=self.training)
 
+
         return node_pool_over_layer, gPool_over_layer
+
+
+class MLP_embedding(torch.nn.Module):
+    def __init__(self, in_chnl, hid_chnl):
+        super(MLP_embedding, self).__init__()
+
+        ## init projection
+        # 1st mlp layer
+        self.lin1_1 = torch.nn.Linear(in_chnl, hid_chnl)
+        self.bn1_1 = torch.nn.BatchNorm1d(hid_chnl)
+        self.lin1_2 = torch.nn.Linear(hid_chnl, hid_chnl)
+
+        ## MLP embedding layers
+        self.nn1 = Sequential(Linear(hid_chnl, hid_chnl), ReLU(), Linear(hid_chnl, hid_chnl))
+        self.bn1 = torch.nn.BatchNorm1d(hid_chnl)
+        self.nn2 = Sequential(Linear(hid_chnl, hid_chnl), ReLU(), Linear(hid_chnl, hid_chnl))
+        self.bn2 = torch.nn.BatchNorm1d(hid_chnl)
+        self.nn3 = Sequential(Linear(hid_chnl, hid_chnl), ReLU(), Linear(hid_chnl, hid_chnl))
+        self.bn3 = torch.nn.BatchNorm1d(hid_chnl)
+        # self.nn4 = Sequential(Linear(hid_chnl, hid_chnl), ReLU(), Linear(hid_chnl, hid_chnl))
+        # self.bn4 = torch.nn.BatchNorm1d(hid_chnl)
+
+        ## layers used in graph pooling
+        self.linears_prediction = torch.nn.ModuleList()
+        for layer in range(1+3):  # 1+x: 1 projection layer + x GIN layers
+            self.linears_prediction.append(nn.Linear(hid_chnl, hid_chnl))
+
+    def forward(self, x, edge_index, batch):
+
+        # init projection
+        h = self.lin1_2(F.relu(self.bn1_1(self.lin1_1(x))))
+        hidden_rep = [h]
+
+        # GIN conv
+        h = F.relu(self.bn1(self.nn1(h)))
+        node_pool_over_layer = h
+        hidden_rep.append(h)
+        h = F.relu(self.bn2(self.nn2(h)))
+        node_pool_over_layer += h
+        hidden_rep.append(h)
+        h = F.relu(self.bn3(self.nn3(h)))
+        node_pool_over_layer += h
+        hidden_rep.append(h)
+        # h = F.relu(self.bn4(self.conv4(h, edge_index)))
+        # node_pool_over_layer += h
+        # hidden_rep.append(h)
+
+        print(h.shape)
+
+        gPool_over_layer = 0
+        # Graph pool
+        for layer, layer_h in enumerate(hidden_rep):
+            g_pool = global_mean_pool(layer_h, batch)
+            gPool_over_layer += F.dropout(self.linears_prediction[layer](g_pool),
+                                          0.5,
+                                          training=self.training)
+
+
+        return node_pool_over_layer, gPool_over_layer
+
+
 

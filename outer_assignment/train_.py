@@ -41,7 +41,7 @@ def train(hidden_dim, vehicle_embd_type, no_batch, no_nodes, policy_net, l_r, no
         action, log_prob = action_sample(pi)
 
         # get reward for each batch
-        reward, rejs, lengths = get_reward(action, data.to(device), no_agent, validation_model)  # reward: tensor [batch, 1]
+        reward, rejs, lengths = get_reward(action, data.to(device), no_agent, validation_model, beta)  # reward: tensor [batch, 1]
         # compute loss
         loss = torch.mul(torch.tensor(reward, device=device) - 2, log_prob.sum(dim=1)).sum()
 
@@ -94,12 +94,14 @@ if __name__ == '__main__':
     lr = 1e-4
     iteration = 10000
     sh_or_mh = 'MH'
+    node_mebd_type = 'mlp'
     GIN_dim = 32
     beta = 100
 
     print('Using', dev, 'to train.\n', 'Size:', str(n_nodes)+'-'+str(n_agent), 'Training...')
 
-    policy = Policy(vehicle_embd_type=sh_or_mh, in_chnl=4, hid_chnl=GIN_dim, n_agent=n_agent, key_size_embd=64,
+    policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_mebd_type,
+                    in_chnl=4, hid_chnl=GIN_dim, n_agent=n_agent, key_size_embd=64,
                     key_size_policy=64, val_size=64, clipping=10, dev=dev)
     policy.train()
 
