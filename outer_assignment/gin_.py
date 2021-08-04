@@ -113,7 +113,7 @@ class MLP_embedding(torch.nn.Module):
         # node_pool_over_layer += h
         # hidden_rep.append(h)
 
-        print(h.shape)
+        print(hidden_rep)
 
         gPool_over_layer = 0
         # Graph pool
