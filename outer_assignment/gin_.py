@@ -54,8 +54,6 @@ class GIN_embedding(torch.nn.Module):
         # node_pool_over_layer += h
         # hidden_rep.append(h)
 
-        print(node_pool_over_layer.shape)
-
         gPool_over_layer = 0
         # Graph pool
         for layer, layer_h in enumerate(hidden_rep):
@@ -63,7 +61,6 @@ class GIN_embedding(torch.nn.Module):
             gPool_over_layer += F.dropout(self.linears_prediction[layer](g_pool),
                                           0.5,
                                           training=self.training)
-
 
         return node_pool_over_layer, gPool_over_layer
 
@@ -90,7 +87,7 @@ class MLP_embedding(torch.nn.Module):
 
         ## layers used in graph pooling
         self.linears_prediction = torch.nn.ModuleList()
-        for layer in range(1+3):  # 1+x: 1 projection layer + x GIN layers
+        for layer in range(1 + 3):  # 1+x: 1 projection layer + x MLP layers
             self.linears_prediction.append(nn.Linear(hid_chnl, hid_chnl))
 
     def forward(self, x, edge_index, batch):
@@ -101,19 +98,15 @@ class MLP_embedding(torch.nn.Module):
 
         # GIN conv
         h = F.relu(self.bn1(self.nn1(h)))
-        node_pool_over_layer = h
         hidden_rep.append(h)
         h = F.relu(self.bn2(self.nn2(h)))
-        node_pool_over_layer += h
         hidden_rep.append(h)
         h = F.relu(self.bn3(self.nn3(h)))
-        node_pool_over_layer += h
         hidden_rep.append(h)
         # h = F.relu(self.bn4(self.conv4(h, edge_index)))
-        # node_pool_over_layer += h
         # hidden_rep.append(h)
 
-        print(hidden_rep)
+        # gPool_over_layer = torch.mean(node_pool_over_layer.reshape(-1, (batch == 0).sum().item(), node_pool_over_layer.shape[-1]), 1, True)
 
         gPool_over_layer = 0
         # Graph pool
@@ -123,8 +116,7 @@ class MLP_embedding(torch.nn.Module):
                                           0.5,
                                           training=self.training)
 
-
-        return node_pool_over_layer, gPool_over_layer
+        return h, gPool_over_layer
 
 
 

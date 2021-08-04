@@ -9,7 +9,18 @@ from outer_assignment.policy_ import Policy, action_sample, get_reward
 from utils import load_model
 
 
-def train(hidden_dim, vehicle_embd_type, no_batch, no_nodes, policy_net, l_r, no_agent, iterations, validation_model, beta, device):
+def train(hidden_dim,
+          vehicle_embd_type,
+          node_mebd_type,
+          no_batch,
+          no_nodes,
+          policy_net,
+          l_r,
+          no_agent,
+          iterations,
+          validation_model,
+          beta,
+          device):
 
     # prepare validation data
     validation_data = torch.load('../testing-instances/'+str(no_nodes)+'/testing_data_'+str(no_nodes)+'_'+str(100))
@@ -68,14 +79,14 @@ def train(hidden_dim, vehicle_embd_type, no_batch, no_nodes, policy_net, l_r, no
             if validation_loss < best_so_far:
                 best_so_far = validation_loss
                 torch.save(policy_net.state_dict(), '../pretrained_assgnmt_beta'+str(beta)+'/{}.pth'.format(
-                    str(no_nodes) + '_' + str(no_agent) + '_' + vehicle_embd_type + '_' + str(hidden_dim)))
+                    str(no_nodes) + '_' + str(no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '_' + str(hidden_dim)))
                 print('Found better policy, and the validation loss is:', format(validation_loss, '.3f'))
                 validation_results.append(validation_loss)
             file_writing_obj1 = open(
-                './training_logs/' + 'itr_log_' + str(no_nodes) + '-' + str(no_agent) + '_' + vehicle_embd_type + '.txt', 'w')
+                './training_logs/' + 'itr_log_' + str(no_nodes) + '-' + str(no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '.txt', 'w')
             file_writing_obj1.write(str(itr_log))
             file_writing_obj2 = open(
-                './training_logs/' + 'vali_log_' + str(no_nodes) + '-' + str(no_agent) + '_' + vehicle_embd_type + '.txt', 'w')
+                './training_logs/' + 'vali_log_' + str(no_nodes) + '-' + str(no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '.txt', 'w')
             file_writing_obj2.write(str(vali_log))
 
             print()
@@ -94,13 +105,13 @@ if __name__ == '__main__':
     lr = 1e-4
     iteration = 10000
     sh_or_mh = 'MH'  # 'MH'-MultiHead, 'SH'-SingleHead
-    node_mebd_type = 'gin'  # 'mlp', 'gin'
+    node_embedding_type = 'mlp'  # 'mlp', 'gin'
     GIN_dim = 32
     beta = 100
 
     print('Using', dev, 'to train.\n', 'Size:', str(n_nodes)+'-'+str(n_agent), 'Training...')
 
-    policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_mebd_type,
+    policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_embedding_type,
                     in_chnl=4, hid_chnl=GIN_dim, n_agent=n_agent, key_size_embd=64,
                     key_size_policy=64, val_size=64, clipping=10, dev=dev)
     policy.train()
@@ -112,4 +123,17 @@ if __name__ == '__main__':
     # set routing agent to eval mode while training assignment agent
     validation_net.eval()
 
-    cProfile.run('train(GIN_dim, sh_or_mh, batch_size, n_nodes, policy, lr, n_agent, iteration, validation_net, beta, dev)', filename='restats')
+    cProfile.run('train('
+                 'GIN_dim,'
+                 'sh_or_mh,'
+                 'node_embedding_type,'
+                 'batch_size,'
+                 'n_nodes,'
+                 'policy,'
+                 'lr,'
+                 'n_agent,'
+                 'iteration,'
+                 'validation_net,'
+                 'beta,'
+                 'dev)',
+                 filename='restats')
