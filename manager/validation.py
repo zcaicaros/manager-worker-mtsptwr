@@ -1,6 +1,6 @@
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from manager.policy_ import action_sample, get_reward
+from manager.policy import action_sample, get_reward
 import torch
 from torch_geometric.data import Data
 from torch_geometric.data import Batch

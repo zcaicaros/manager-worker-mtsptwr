@@ -3,9 +3,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import torch
 from torch_geometric.data import Data
 from torch_geometric.data import Batch
-from manager.validation_ import validate
+from manager.validation import validate
 import time
-from manager.policy_ import Policy, action_sample, get_reward
+from manager.policy import Policy, action_sample, get_reward
 from utils import load_model
 
 
@@ -71,14 +71,14 @@ def train(hidden_dim,
         itr_log.append([format(sum(reward)/no_batch, '.6f'), format(sum(rejs)/len(rejs), '.6f'), format(sum(lengths)/len(lengths), '.6f')])
 
         # validate and save best nets
-        if (itr+1) % 100 == 0:
+        if (itr+1) % 1 == 0:
             validation_loss, vali_rejs, vali_lengths = validate(validation_data, policy_net, no_agent, validation_model, beta, device)
             print('Validation mean rej.rate:', format(sum(vali_rejs)/len(vali_rejs), '.4f'),
                   'Validation mean length:', format(sum(vali_lengths)/len(vali_lengths), '.4f'))
             vali_log.append([format(sum(vali_rejs)/len(vali_rejs), '.6f'), format(sum(vali_lengths)/len(vali_lengths), '.6f')])
             if validation_loss < best_so_far:
                 best_so_far = validation_loss
-                torch.save(policy_net.state_dict(), '../pretrained_assgnmt_beta'+str(beta)+'/{}.pth'.format(
+                torch.save(policy_net.state_dict(), '../trained_manager_beta'+str(beta)+'/{}.pth'.format(
                     str(no_nodes) + '_' + str(no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '_' + str(hidden_dim)))
                 print('Found better policy, and the validation loss is:', format(validation_loss, '.3f'))
                 validation_results.append(validation_loss)

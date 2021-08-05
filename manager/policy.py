@@ -1,4 +1,4 @@
-from gin_ import GIN_embedding, MLP_embedding
+from gin import GIN_embedding, MLP_embedding
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
