@@ -3,9 +3,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import torch
 from torch_geometric.data import Data
 from torch_geometric.data import Batch
-from outer_assignment.validation_ import validate
+from manager.validation_ import validate
 import time
-from outer_assignment.policy_ import Policy, action_sample, get_reward
+from manager.policy_ import Policy, action_sample, get_reward
 from utils import load_model
 
 
@@ -117,7 +117,7 @@ if __name__ == '__main__':
     policy.train()
 
     # load routing agent
-    validation_net = load_model('../pretrained_inner_route_planner_beta'+str(beta)+'/'+str(int(n_nodes / n_agent))+'.pt', dev)
+    validation_net = load_model('../trained_worker_beta'+str(beta)+'/'+str(int(n_nodes / n_agent))+'.pt', dev)
     validation_net.to(dev)
     validation_net.decode_type = 'greedy'
     # set routing agent to eval mode while training assignment agent

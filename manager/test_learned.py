@@ -1,6 +1,6 @@
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from outer_assignment.policy_ import Policy, action_sample, get_reward, action_greedy
+from manager.policy_ import Policy, action_sample, get_reward, action_greedy
 import torch
 import time
 from torch_geometric.data import Data
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     for size in n_nodes:
         print('Size:', size, 'Agents:', n_vehicles, 'Worker-size:', str(int(size / n_vehicles)), 'Manager-size:', str(manager_size[0])+'-'+str(n_vehicles))
         # load routing network
-        validation_net = load_model('../pretrained_inner_route_planner_beta'+str(beta)+'/' + str(int(size / n_vehicles)) + '.pt', dev)
+        validation_net = load_model('../trained_worker_beta'+str(beta)+'/' + str(int(size / n_vehicles)) + '.pt', dev)
         validation_net.eval()
         validation_net.to(dev)
         validation_net.decode_type = 'greedy'
