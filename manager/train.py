@@ -100,19 +100,19 @@ if __name__ == '__main__':
     torch.manual_seed(2)
 
     n_agent = 5
-    n_nodes = 50
+    n_nodes = 150
     batch_size = 128
     lr = 1e-4
     iteration = 10000
     sh_or_mh = 'MH'  # 'MH'-MultiHead, 'SH'-SingleHead
     node_embedding_type = 'mlp'  # 'mlp', 'gin'
-    GIN_dim = 32
+    hidden_dim = 32
     beta = 100
 
     print('Using', dev, 'to train.\n', 'Size:', str(n_nodes)+'-'+str(n_agent), 'Training...')
 
     policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_embedding_type,
-                    in_chnl=4, hid_chnl=GIN_dim, n_agent=n_agent, key_size_embd=64,
+                    in_chnl=4, hid_chnl=hidden_dim, n_agent=n_agent, key_size_embd=64,
                     key_size_policy=64, val_size=64, clipping=10, dev=dev)
     policy.train()
 
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     validation_net.eval()
 
     cProfile.run('train('
-                 'GIN_dim,'
+                 'hidden_dim,'
                  'sh_or_mh,'
                  'node_embedding_type,'
                  'batch_size,'
