@@ -88,10 +88,10 @@ if __name__ == '__main__':
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(1)  # 1
 
-    n_vehicles = 10
-    manager_size = [150, n_vehicles]
+    n_vehicles = 5
+    manager_size = [50, n_vehicles]
     sh_or_mh = 'MH'
-    node_embd_type = 'gin'
+    node_embd_type = 'mlp'
     GIN_dim = 32
     n_nodes = [50, 100, 150, 200, 300, 400, 500]
     # n_nodes = [50]
