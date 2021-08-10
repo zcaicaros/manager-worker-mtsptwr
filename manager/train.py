@@ -71,7 +71,7 @@ def train(hidden_dim,
         itr_log.append([format(sum(reward)/no_batch, '.6f'), format(sum(rejs)/len(rejs), '.6f'), format(sum(lengths)/len(lengths), '.6f')])
 
         # validate and save best nets
-        if (itr+1) % 1 == 0:
+        if (itr+1) % 100 == 0:
             validation_loss, vali_rejs, vali_lengths = validate(validation_data, policy_net, no_agent, validation_model, beta, device)
             print('Validation mean rej.rate:', format(sum(vali_rejs)/len(vali_rejs), '.4f'),
                   'Validation mean length:', format(sum(vali_lengths)/len(vali_lengths), '.4f'))
