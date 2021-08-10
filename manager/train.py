@@ -99,7 +99,7 @@ if __name__ == '__main__':
 
     torch.manual_seed(2)
 
-    n_agent = 5
+    n_agent = 10
     n_nodes = 150
     batch_size = 128
     lr = 1e-4
