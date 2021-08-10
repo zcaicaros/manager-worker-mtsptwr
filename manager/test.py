@@ -92,7 +92,7 @@ if __name__ == '__main__':
     manager_size = [50, n_vehicles]
     sh_or_mh = 'MH'
     node_embd_type = 'mlp'
-    GIN_dim = 32
+    hidden_dim = 32
     n_nodes = [50, 100, 150, 200, 300, 400, 500]
     # n_nodes = [50]
     batch_size = 100
@@ -103,13 +103,13 @@ if __name__ == '__main__':
 
     # load net
     policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_embd_type,
-                    in_chnl=4, hid_chnl=GIN_dim, n_agent=n_vehicles, key_size_embd=64,
+                    in_chnl=4, hid_chnl=hidden_dim, n_agent=n_vehicles, key_size_embd=64,
                     key_size_policy=64, val_size=64, clipping=10, dev=dev)
 
     from pathlib import Path
-    path = Path('../trained_manager_beta'+str(beta)+'/{}.pth'.format(str(manager_size[0]) + '_' + str(n_vehicles) + '_' + sh_or_mh + '_' + node_embd_type + '_' + str(GIN_dim)))
+    path = Path('../trained_manager_beta' + str(beta) +'/{}.pth'.format(str(manager_size[0]) + '_' + str(n_vehicles) + '_' + sh_or_mh + '_' + node_embd_type + '_' + str(hidden_dim)))
     if path.is_file():
-        policy.load_state_dict(torch.load('../trained_manager_beta'+str(beta)+'/{}.pth'.format(str(manager_size[0]) + '_' + str(n_vehicles) + '_' + sh_or_mh + '_' + node_embd_type + '_' + str(GIN_dim)), map_location=torch.device(dev)))
+        policy.load_state_dict(torch.load('../trained_manager_beta' + str(beta) +'/{}.pth'.format(str(manager_size[0]) + '_' + str(n_vehicles) + '_' + sh_or_mh + '_' + node_embd_type + '_' + str(hidden_dim)), map_location=torch.device(dev)))
         policy.eval()
     else:
         raise Exception('Your testing model not exist, please train it first')
