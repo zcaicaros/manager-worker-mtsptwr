@@ -99,13 +99,13 @@ if __name__ == '__main__':
 
     torch.manual_seed(2)
 
-    n_agent = 10
+    n_agent = 5
     n_nodes = 150
     batch_size = 128
     lr = 1e-4
     iteration = 10000
     sh_or_mh = 'MH'  # 'MH'-MultiHead, 'SH'-SingleHead
-    node_embedding_type = 'gin'  # 'mlp', 'gin'
+    node_embedding_type = 'mlp'  # 'mlp', 'gin'
     hidden_dim = 32
     beta = 100
 
