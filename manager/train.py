@@ -119,7 +119,8 @@ if __name__ == '__main__':
     hidden_dim = 32
     beta = 100
 
-    print('Using', dev, 'to train.\n', 'Size:', str(n_nodes) + '-' + str(n_agent), 'Training...')
+    print('Training device:', dev, '\n', 'Size:', str(n_nodes) + '-' + str(n_agent), 'Training...')
+    print('Training model: {}_{}_{}_{}_{}'.format(n_nodes, n_agent, sh_or_mh, node_embedding_type, hidden_dim))
 
     policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_embedding_type,
                     in_chnl=4, hid_chnl=hidden_dim, n_agent=n_agent, key_size_embd=64,
