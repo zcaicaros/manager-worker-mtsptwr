@@ -1,4 +1,5 @@
 import os, sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import torch
 from torch_geometric.data import Data
@@ -21,9 +22,9 @@ def train(hidden_dim,
           validation_model,
           beta,
           device):
-
     # prepare validation data
-    validation_data = torch.load('../testing-instances/'+str(no_nodes)+'/testing_data_'+str(no_nodes)+'_'+str(100))
+    validation_data = torch.load(
+        '../testing-instances/' + str(no_nodes) + '/testing_data_' + str(no_nodes) + '_' + str(100))
     # a large start point for validation
     best_so_far = 1000000
     validation_results = []
@@ -43,16 +44,19 @@ def train(hidden_dim,
         depot = torch.tensor([0.5, 0.5, 0, 10], dtype=torch.float).repeat(batch_size, 1, 1)  # constant depot
         data = torch.cat([depot, location_with_tw], dim=1)  # final instances with depot
         adj = torch.ones([data.shape[0], data.shape[1], data.shape[1]])  # adjacent matrix fully connected
-        data_list = [Data(x=data[i], edge_index=torch.nonzero(adj[i], as_tuple=False).t()) for i in range(data.shape[0])]
+        data_list = [Data(x=data[i], edge_index=torch.nonzero(adj[i], as_tuple=False).t()) for i in
+                     range(data.shape[0])]
         batch_graph = Batch.from_data_list(data_list=data_list).to(device)
 
         # get pi
-        pi = policy_net(batch_graph, n_nodes=data.shape[1], n_batch=no_batch)  # nodes assignment to agents without depot: e.g. tsp-20 pi.shape=[batch_size, 19]
+        pi = policy_net(batch_graph, n_nodes=data.shape[1],
+                        n_batch=no_batch)  # nodes assignment to agents without depot: e.g. tsp-20 pi.shape=[batch_size, 19]
         # sample action and calculate log probabilities
         action, log_prob = action_sample(pi)
 
         # get reward for each batch
-        reward, rejs, lengths = get_reward(action, data.to(device), no_agent, validation_model, beta)  # reward: tensor [batch, 1]
+        reward, rejs, lengths = get_reward(action, data.to(device), no_agent, validation_model,
+                                           beta)  # reward: tensor [batch, 1]
         # compute loss
         loss = torch.mul(torch.tensor(reward, device=device) - 2, log_prob.sum(dim=1)).sum()
 
@@ -64,29 +68,35 @@ def train(hidden_dim,
 
         # log each itr
         print('Iteration:', itr,
-              'Total loss:', format(sum(reward)/no_batch, '.3f'),
-              'Mean rej.rate:', format(sum(rejs)/len(rejs), '.4f'),
-              'Mean length:', format(sum(lengths)/len(lengths), '.4f'),
-              'Time(s):', format(t2-t1, '.3f'))
-        itr_log.append([format(sum(reward)/no_batch, '.6f'), format(sum(rejs)/len(rejs), '.6f'), format(sum(lengths)/len(lengths), '.6f')])
+              'Total loss:', format(sum(reward) / no_batch, '.3f'),
+              'Mean rej.rate:', format(sum(rejs) / len(rejs), '.4f'),
+              'Mean length:', format(sum(lengths) / len(lengths), '.4f'),
+              'Time(s):', format(t2 - t1, '.3f'))
+        itr_log.append([format(sum(reward) / no_batch, '.6f'), format(sum(rejs) / len(rejs), '.6f'),
+                        format(sum(lengths) / len(lengths), '.6f')])
 
         # validate and save best nets
-        if (itr+1) % 100 == 0:
-            validation_loss, vali_rejs, vali_lengths = validate(validation_data, policy_net, no_agent, validation_model, beta, device)
-            print('Validation mean rej.rate:', format(sum(vali_rejs)/len(vali_rejs), '.4f'),
-                  'Validation mean length:', format(sum(vali_lengths)/len(vali_lengths), '.4f'))
-            vali_log.append([format(sum(vali_rejs)/len(vali_rejs), '.6f'), format(sum(vali_lengths)/len(vali_lengths), '.6f')])
+        if (itr + 1) % 100 == 0:
+            validation_loss, vali_rejs, vali_lengths = validate(validation_data, policy_net, no_agent, validation_model,
+                                                                beta, device)
+            print('Validation mean rej.rate:', format(sum(vali_rejs) / len(vali_rejs), '.4f'),
+                  'Validation mean length:', format(sum(vali_lengths) / len(vali_lengths), '.4f'))
+            vali_log.append(
+                [format(sum(vali_rejs) / len(vali_rejs), '.6f'), format(sum(vali_lengths) / len(vali_lengths), '.6f')])
             if validation_loss < best_so_far:
                 best_so_far = validation_loss
-                torch.save(policy_net.state_dict(), '../trained_manager_beta'+str(beta)+'/{}.pth'.format(
-                    str(no_nodes) + '_' + str(no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '_' + str(hidden_dim)))
+                torch.save(policy_net.state_dict(), '../trained_manager_beta' + str(beta) + '/{}.pth'.format(
+                    str(no_nodes) + '_' + str(no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '_' + str(
+                        hidden_dim)))
                 print('Found better policy, and the validation loss is:', format(validation_loss, '.3f'))
                 validation_results.append(validation_loss)
             file_writing_obj1 = open(
-                './training_logs/' + 'itr_log_' + str(no_nodes) + '-' + str(no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '.txt', 'w')
+                './training_logs/' + 'itr_log_' + str(no_nodes) + '-' + str(
+                    no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '.txt', 'w')
             file_writing_obj1.write(str(itr_log))
             file_writing_obj2 = open(
-                './training_logs/' + 'vali_log_' + str(no_nodes) + '-' + str(no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '.txt', 'w')
+                './training_logs/' + 'vali_log_' + str(no_nodes) + '-' + str(
+                    no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '.txt', 'w')
             file_writing_obj2.write(str(vali_log))
 
             print()
@@ -109,24 +119,24 @@ if __name__ == '__main__':
     hidden_dim = 32
     beta = 100
 
-    print('Using', dev, 'to train.\n', 'Size:', str(n_nodes)+'-'+str(n_agent), 'Training...')
+    print('Using', dev, 'to train.\n', 'Size:', str(n_nodes) + '-' + str(n_agent), 'Training...')
 
     policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_embedding_type,
                     in_chnl=4, hid_chnl=hidden_dim, n_agent=n_agent, key_size_embd=64,
                     key_size_policy=64, val_size=64, clipping=10, dev=dev)
 
     policy.load_state_dict(torch.load('../trained_manager_beta{}/{}_{}_{}_{}_{}.pth'.format(beta,
-                                                                                           n_nodes,
-                                                                                           n_agent,
-                                                                                           sh_or_mh,
-                                                                                           node_embedding_type,
-                                                                                           hidden_dim),
+                                                                                            n_nodes,
+                                                                                            n_agent,
+                                                                                            sh_or_mh,
+                                                                                            node_embedding_type,
+                                                                                            hidden_dim),
                                       map_location=torch.device(dev)))
 
     policy.train()
 
     # load routing agent
-    validation_net = load_model('../trained_worker_beta'+str(beta)+'/'+str(int(n_nodes / n_agent))+'.pt', dev)
+    validation_net = load_model('../trained_worker_beta' + str(beta) + '/' + str(int(n_nodes / n_agent)) + '.pt', dev)
     validation_net.to(dev)
     validation_net.decode_type = 'greedy'
     # set routing agent to eval mode while training assignment agent
