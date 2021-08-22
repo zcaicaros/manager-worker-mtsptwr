@@ -97,13 +97,13 @@ if __name__ == '__main__':
 
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    torch.manual_seed(2)
+    torch.manual_seed(3)
 
     n_agent = 5
     n_nodes = 150
     batch_size = 128
     lr = 1e-4
-    iteration = 10000
+    iteration = 6000
     sh_or_mh = 'MH'  # 'MH'-MultiHead, 'SH'-SingleHead
     node_embedding_type = 'mlp'  # 'mlp', 'gin'
     hidden_dim = 32
@@ -114,6 +114,15 @@ if __name__ == '__main__':
     policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_embedding_type,
                     in_chnl=4, hid_chnl=hidden_dim, n_agent=n_agent, key_size_embd=64,
                     key_size_policy=64, val_size=64, clipping=10, dev=dev)
+
+    policy.load_state_dict(torch.load('../trained_manager_beta{}/{}_{}_{}_{}_{}.pth'.format(beta,
+                                                                                           n_nodes,
+                                                                                           n_agent,
+                                                                                           sh_or_mh,
+                                                                                           node_embedding_type,
+                                                                                           hidden_dim),
+                                      map_location=torch.device(dev)))
+
     policy.train()
 
     # load routing agent
