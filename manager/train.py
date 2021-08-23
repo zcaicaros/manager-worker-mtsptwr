@@ -120,7 +120,8 @@ if __name__ == '__main__':
     hidden_dim = args.hidden_dim
     beta = args.beta
 
-    print('Training device:', dev, '\n', 'Size:', str(n_nodes) + '-' + str(n_agent), 'Steps:', iteration, 'Training...')
+    print('Training device:', dev)
+    print('Steps:', iteration)
     print('Training model: {}_{}_{}_{}_{}'.format(n_nodes, n_agent, sh_or_mh, node_embedding_type, hidden_dim))
 
     policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_embedding_type,
