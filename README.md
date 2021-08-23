@@ -2,6 +2,7 @@
 
 ## Installation
 python 3.7 (tested on 3.7.7 and 3.7.10, recommend 3.7.10)
+
 cuda 10.1 (you can create a docker container for this if your system has higher/lower version of cuda)
 
 
