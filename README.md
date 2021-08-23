@@ -7,7 +7,7 @@ cuda 10.1 (you can create a docker container for this if your system has higher/
 
 Install [pytorch1.7.1](https://pytorch.org/get-started/previous-versions/) with your CUDA version or CPU.
 
-For example, to install `pytorch 1.7.1` with `CUDA 10.1`, just run:
+For example, to install `pytorch 1.7.1` with `CUDA 10.1` using `pip`, just run:
 ````
 pip install torch==1.7.1+cu101 torchvision==0.8.2+cu101 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
 ````
