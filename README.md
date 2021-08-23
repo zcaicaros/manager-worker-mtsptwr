@@ -5,7 +5,6 @@ python 3.7 (tested on 3.7.7 and 3.7.10, recommend 3.7.10)
 
 cuda 10.1 (you can create a docker container for this if your system has higher/lower version of cuda)
 
-
 Install [pytorch1.7.1](https://pytorch.org/get-started/previous-versions/) with your CUDA version or CPU.
 
 For example, to install `pytorch 1.7.1` with `CUDA 10.1`, just run:
