@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    torch.manual_seed(3)
+    torch.manual_seed(6)
 
     n_agent = args.n_agent
     n_nodes = args.n_nodes
