@@ -88,8 +88,8 @@ if __name__ == '__main__':
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(1)  # 1
 
-    n_vehicles = 5
-    manager_size = [50, n_vehicles]
+    n_vehicles = 10
+    manager_size = [150, n_vehicles]
     sh_or_mh = 'MH'
     node_embd_type = 'mlp'
     hidden_dim = 32
@@ -120,7 +120,10 @@ if __name__ == '__main__':
             print(name, param.data)'''
 
     for size in n_nodes:
-        print('Size:', size, 'Agents:', n_vehicles, 'Worker-size:', str(int(size / n_vehicles)), 'Manager-size:', str(manager_size[0])+'-'+str(n_vehicles))
+        print('Testing Problem of size: {}-{}'.format(size, n_vehicles))
+        print('Employed worker:', str(int(size / n_vehicles)), 'Employed Manager:', str(manager_size[0])+'-'+str(n_vehicles))
+        print('Embedding type:', node_embd_type)
+
         # load routing network
         validation_net = load_model('../trained_worker_beta'+str(beta)+'/' + str(int(size / n_vehicles)) + '.pt', dev)
         validation_net.eval()
@@ -169,7 +172,7 @@ if __name__ == '__main__':
         objs_per_seed.append(format(np.array(objs).mean(), '.5f'))
         rejs_per_seed.append(format(np.array(rejs).mean(), '.5f'))
         lengths_per_seed.append(format(np.array(lengths).mean(), '.5f'))
-        print('Size', size, 'Vehicles', n_vehicles, ':')
+        # print('Size', size, 'Vehicles', n_vehicles, ':')
         print('Rej.rate:', rejs_per_seed)
         print('Length:', lengths_per_seed)
         print('Cost:', objs_per_seed)
