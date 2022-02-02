@@ -128,13 +128,18 @@ if __name__ == '__main__':
                     in_chnl=4, hid_chnl=hidden_dim, n_agent=n_agent, key_size_embd=64,
                     key_size_policy=64, val_size=64, clipping=10, dev=dev)
 
-    policy.load_state_dict(torch.load('../trained_manager_beta{}/{}_{}_{}_{}_{}.pth'.format(beta,
-                                                                                            n_nodes,
-                                                                                            n_agent,
-                                                                                            sh_or_mh,
-                                                                                            node_embedding_type,
-                                                                                            hidden_dim),
-                                      map_location=torch.device(dev)))
+    # policy.load_state_dict(
+    #     torch.load(
+    #         '../trained_manager_beta{}/{}_{}_{}_{}_{}.pth'.format(
+    #             beta,
+    #             n_nodes,
+    #             n_agent,
+    #             sh_or_mh,
+    #             node_embedding_type,
+    #             hidden_dim),
+    #         map_location=torch.device(dev)
+    #     )
+    # )
 
     policy.train()
 
