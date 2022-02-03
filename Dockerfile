@@ -2,6 +2,7 @@ FROM nvidia/cuda:10.1-cudnn8-devel-ubuntu18.04
 
 # pay attention ARG "cuda_ver" should match base image above
 ARG cuda_ver=cu101
+ARG miniconda_ver=Miniconda3-py37_4.9.2-Linux-x86_64.sh
 ARG project=manager-worker-mtsptwr
 ARG username=czhang
 ARG password=czhang
@@ -39,7 +40,7 @@ USER ${username}
 WORKDIR /home/${project}
 
 # download conda installer and save as "~/miniconda.sh"
-RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh \
+RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/${miniconda_ver} \
     # user owns installer
     && chmod +x ~/miniconda.sh \
     # install conda with name ~/${project}-miniconda-environment;
