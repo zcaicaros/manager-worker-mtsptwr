@@ -10,5 +10,5 @@ parser.add_argument('--iteration', type=int, default=10000)
 parser.add_argument('--sh_or_mh', type=str, default='MH')  # 'MH'-MultiHead, 'SH'-SingleHead
 parser.add_argument('--node_embedding_type', type=str, default='gin')  # 'mlp', 'gin'
 parser.add_argument('--hidden_dim', type=int, default=32)
-parser.add_argument('--beta', type=int, default=100)
+parser.add_argument('--beta', type=int, default=10)
 args = parser.parse_args()

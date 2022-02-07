@@ -107,9 +107,10 @@ if __name__ == '__main__':
                     key_size_policy=64, val_size=64, clipping=10, dev=dev)
 
     from pathlib import Path
-    path = Path('../trained_manager_beta' + str(beta) +'/{}.pth'.format(str(manager_size[0]) + '_' + str(n_vehicles) + '_' + sh_or_mh + '_' + node_embd_type + '_' + str(hidden_dim)))
+    path = Path('../trained_managers/{}_{}_{}_{}_{}_{}.pth'.format(
+        beta, no_nodes, no_agent, vehicle_embd_type, node_mebd_type, hidden_dim))
     if path.is_file():
-        policy.load_state_dict(torch.load('../trained_manager_beta' + str(beta) +'/{}.pth'.format(str(manager_size[0]) + '_' + str(n_vehicles) + '_' + sh_or_mh + '_' + node_embd_type + '_' + str(hidden_dim)), map_location=torch.device(dev)))
+        policy.load_state_dict(torch.load(path))
         policy.eval()
     else:
         raise Exception('Your testing model not exist, please train it first')
@@ -125,10 +126,10 @@ if __name__ == '__main__':
         print('Embedding type:', node_embd_type)
 
         # load routing network
-        validation_net = load_model('../trained_worker_beta'+str(beta)+'/' + str(int(size / n_vehicles)) + '.pt', dev)
-        validation_net.eval()
-        validation_net.to(dev)
-        validation_net.decode_type = 'greedy'
+        trained_worker = load_model('../trained_workers/beta_{}_tsptwr_{}.pt'.format(beta, int(n_nodes / n_agent)), dev)
+        trained_worker.eval()
+        trained_worker.to(dev)
+        trained_worker.decode_type = 'greedy'
 
         testing_data = torch.load(
             '../testing-instances/' + str(size) + '/testing_data_' + str(size) + '_' + str(100))
@@ -157,7 +158,7 @@ if __name__ == '__main__':
             data = testing_data[j].unsqueeze(0)
 
             # testing
-            obj, rej, length, cts, assign = test(policy, data, validation_net, assignment_type, k_means_cluster_type, show_cluster, n_vehicles, beta, dev)
+            obj, rej, length, cts, assign = test(policy, data, trained_worker, assignment_type, k_means_cluster_type, show_cluster, n_vehicles, beta, dev)
             objs.append(obj)
             rejs.append(rej)
             lengths.append(length)

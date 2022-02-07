@@ -85,9 +85,8 @@ def train(hidden_dim,
                 [format(sum(vali_rejs) / len(vali_rejs), '.6f'), format(sum(vali_lengths) / len(vali_lengths), '.6f')])
             if validation_loss < best_so_far:
                 best_so_far = validation_loss
-                torch.save(policy_net.state_dict(), '../trained_manager_beta' + str(beta) + '/{}.pth'.format(
-                    str(no_nodes) + '_' + str(no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '_' + str(
-                        hidden_dim)))
+                torch.save(policy_net.state_dict(), '../trained_managers/{}_{}_{}_{}_{}_{}.pth'.format(
+                    beta, no_nodes, no_agent, vehicle_embd_type, node_mebd_type, hidden_dim))
                 print('Found better policy, and the validation loss is:', format(validation_loss, '.3f'))
                 validation_results.append(validation_loss)
             file_writing_obj1 = open(
@@ -144,7 +143,10 @@ if __name__ == '__main__':
     policy.train()
 
     # load routing agent
-    worker_net = load_model('../trained_worker_beta' + str(beta) + '/' + str(int(n_nodes / n_agent)) + '.pt', dev)
+    # worker_net = load_model('../trained_worker_beta' + str(beta) + '/' + str(int(n_nodes / n_agent)) + '.pt', dev)  # for normal training
+    worker_net = load_model(
+        '../trained_workers/beta_{}_tsptwr_{}.pt'.format(beta, int(n_nodes / n_agent)),
+        dev)  # loading worker for beta ablation study
     worker_net.to(dev)
     worker_net.decode_type = 'greedy'
     # set routing agent to eval mode while training assignment agent
