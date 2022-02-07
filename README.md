@@ -1,7 +1,7 @@
 # Learning to Solve Multiple-TSP with Time Window and Rejection via Deep Reinforcement Learning
 
 ## Requirement
-Ubuntu 18.04.5 LTS 
+Ubuntu 20.04 LTS 
 
 [Nvidia Docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
 
