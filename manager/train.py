@@ -19,7 +19,7 @@ def train(hidden_dim,
           l_r,
           no_agent,
           iterations,
-          validation_model,
+          trained_worker,
           beta,
           device):
     # prepare validation data
@@ -55,7 +55,7 @@ def train(hidden_dim,
         action, log_prob = action_sample(pi)
 
         # get reward for each batch
-        reward, rejs, lengths = get_reward(action, data.to(device), no_agent, validation_model,
+        reward, rejs, lengths = get_reward(action, data.to(device), no_agent, trained_worker,
                                            beta)  # reward: tensor [batch, 1]
         # compute loss
         loss = torch.mul(torch.tensor(reward, device=device) - 2, log_prob.sum(dim=1)).sum()
@@ -77,7 +77,7 @@ def train(hidden_dim,
 
         # validate and save best nets
         if (itr + 1) % 100 == 0:
-            validation_loss, vali_rejs, vali_lengths = validate(validation_data, policy_net, no_agent, validation_model,
+            validation_loss, vali_rejs, vali_lengths = validate(validation_data, policy_net, no_agent, trained_worker,
                                                                 beta, device)
             print('Validation mean rej.rate:', format(sum(vali_rejs) / len(vali_rejs), '.4f'),
                   'Validation mean length:', format(sum(vali_lengths) / len(vali_lengths), '.4f'))
@@ -144,11 +144,11 @@ if __name__ == '__main__':
     policy.train()
 
     # load routing agent
-    validation_net = load_model('../trained_worker_beta' + str(beta) + '/' + str(int(n_nodes / n_agent)) + '.pt', dev)
-    validation_net.to(dev)
-    validation_net.decode_type = 'greedy'
+    worker_net = load_model('../trained_worker_beta' + str(beta) + '/' + str(int(n_nodes / n_agent)) + '.pt', dev)
+    worker_net.to(dev)
+    worker_net.decode_type = 'greedy'
     # set routing agent to eval mode while training assignment agent
-    validation_net.eval()
+    worker_net.eval()
 
     cProfile.run('train('
                  'hidden_dim,'
@@ -160,7 +160,7 @@ if __name__ == '__main__':
                  'lr,'
                  'n_agent,'
                  'iteration,'
-                 'validation_net,'
+                 'worker_net,'
                  'beta,'
                  'dev)',
                  filename='restats')
