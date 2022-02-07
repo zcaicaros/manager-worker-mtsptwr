@@ -10,7 +10,7 @@ python 3.7.x
 ## Manual Installation
 
 
-cuda 10.1 + pytorch1.7.1
+cuda 11.0 + pytorch1.7.1
 
 ```commandline
 pip install torch==1.7.1 torchvision==0.8.2 torchaudio==0.7.2 -f https://download.pytorch.org/whl/cu101/torch_stable.html
@@ -32,10 +32,10 @@ Clone this repo and within the repo folder run the following command.
 
 Create image `manager-worker-mtsptwr_image`:
 ```commandline
-sudo docker build -t manager-worker-mtsptwr_image .
+sudo docker build -t manager-worker-mtsptwr-image .
 ```
 
 Create container `manager-worker-mtsptwr_container` from `manager-worker-mtsptwr_image`, and activate it:
 ```commandline
-sudo docker run --gpus all --name manager-worker-mtsptwr_container -it manager-worker-mtsptwr_image
+sudo docker run --gpus all --name manager-worker-mtsptwr-container -it manager-worker-mtsptwr-image
 ```
