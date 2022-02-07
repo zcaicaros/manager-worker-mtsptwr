@@ -1,7 +1,7 @@
 FROM nvidia/cuda:11.0.3-cudnn8-devel-ubuntu20.04
 
 # pay attention ARG "cuda_ver" should match base image above
-ARG cuda_ver=cu101
+ARG cuda_ver=cu110
 # python 3.7.9
 ARG miniconda_ver=Miniconda3-py37_4.9.2-Linux-x86_64.sh
 ARG project=manager-worker-mtsptwr
