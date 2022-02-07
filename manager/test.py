@@ -84,6 +84,7 @@ def test(model, dataset, inner_model, assgn_type, cluster_type, show_cluster, no
 
 
 if __name__ == '__main__':
+    from pathlib import Path
 
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(1)  # 1
@@ -101,20 +102,10 @@ if __name__ == '__main__':
     k_means_cluster_type = 'spacial'  # 'temporal+spacial', or 'spacial'
     show_cluster = False
 
-    # load net
+    # init manager net
     policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_embd_type,
                     in_chnl=4, hid_chnl=hidden_dim, n_agent=n_vehicles, key_size_embd=64,
                     key_size_policy=64, val_size=64, clipping=10, dev=dev)
-
-    from pathlib import Path
-    path = Path('../trained_managers/{}_{}_{}_{}_{}_{}.pth'.format(
-        beta, no_nodes, no_agent, vehicle_embd_type, node_mebd_type, hidden_dim))
-    if path.is_file():
-        policy.load_state_dict(torch.load(path))
-        policy.eval()
-    else:
-        raise Exception('Your testing model not exist, please train it first')
-
 
     '''for name, param in policy.named_parameters():
         if param.requires_grad:
@@ -125,7 +116,16 @@ if __name__ == '__main__':
         print('Employed worker:', str(int(size / n_vehicles)), 'Employed Manager:', str(manager_size[0])+'-'+str(n_vehicles))
         print('Embedding type:', node_embd_type)
 
-        # load routing network
+        # load manager network
+        path = Path('../trained_managers/{}_{}_{}_{}_{}_{}.pth'.format(
+            beta, size, n_vehicles, sh_or_mh, node_embd_type, hidden_dim))
+        if path.is_file():
+            policy.load_state_dict(torch.load(path))
+            policy.eval()
+        else:
+            raise Exception('Your testing model not exist, please train it first')
+
+        # load worker network
         trained_worker = load_model('../trained_workers/beta_{}_tsptwr_{}.pt'.format(beta, int(n_nodes / n_agent)), dev)
         trained_worker.eval()
         trained_worker.to(dev)
