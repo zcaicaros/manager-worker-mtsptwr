@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.1-cudnn8-devel-ubuntu18.04
+FROM nvidia/cuda:11.0.3-cudnn8-devel-ubuntu20.04
 
 # pay attention ARG "cuda_ver" should match base image above
 ARG cuda_ver=cu101
