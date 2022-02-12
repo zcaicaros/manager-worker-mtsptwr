@@ -70,8 +70,8 @@ def train(hidden_dim,
         # log each itr
         print('Iteration:', itr,
               'Total loss:', format(sum(reward) / no_batch, '.3f'),
-              'Mean rej.rate:', format(sum(rejs) / len(rejs), '.4f'),
-              'Mean length:', format(sum(lengths) / len(lengths), '.4f'),
+              'Rejection rate:', format(sum(rejs) / len(rejs), '.4f'),
+              'Length:', format(sum(lengths) / len(lengths), '.4f'),
               'Time(s):', format(t2 - t1, '.3f'))
         itr_log.append([format(sum(reward) / no_batch, '.6f'), format(sum(rejs) / len(rejs), '.6f'),
                         format(sum(lengths) / len(lengths), '.6f')])
