@@ -8,15 +8,20 @@ vehicles = 5
 log_type = 'train'  # train or vali
 sh_or_mh = 'MH'
 plot_individual = False
+node_embedding_type = 'gin'
+hidden_dim = 32
 beta = 100
+reward_type = 'total'
 anchor_box_font_size = 30
 
 if plot_individual:
     path = './training_logs/'
     if log_type == 'train':
-        f = open(path + 'itr_log_' + str(size) + '-' + str(vehicles) + '_' + sh_or_mh + '.txt', 'r')
+        f = open('./training_logs/training_log_{}_{}_{}_{}_{}_{}_{}.txt'.format(
+                    beta, size, vehicles, sh_or_mh, node_embedding_type, hidden_dim, reward_type), 'r')
     else:
-        f = open(path + 'vali_log_' + str(size) + '-' + str(vehicles) + '_' + sh_or_mh + '.txt', 'r')
+        f = open('./training_logs/validation_log_{}_{}_{}_{}_{}_{}_{}.txt'.format(
+                    beta, size, vehicles, sh_or_mh, node_embedding_type, hidden_dim, reward_type), 'r')
     logs = f.readlines()
     training_log = []
     validation_log = []
