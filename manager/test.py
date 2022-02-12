@@ -11,7 +11,7 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
 
-def test(model, dataset, inner_model, assgn_type, cluster_type, show_cluster, no_agent, beta, device):
+def test(model, dataset, inner_model, assgn_type, cluster_type, show_cluster, no_agent, beta, reward_type, device):
     # to batch graph
     adj = torch.ones([dataset.shape[0], dataset.shape[1], dataset.shape[1]])  # adjacent matrix fully connected
     data_list = [Data(x=dataset[i], edge_index=torch.nonzero(adj[i], as_tuple=False).t(), as_tuple=False) for i in range(dataset.shape[0])]
@@ -73,7 +73,7 @@ def test(model, dataset, inner_model, assgn_type, cluster_type, show_cluster, no
 
     # get reward for each instance
     assert action is not None
-    reward_, rej_, length_ = get_reward(action, data.to(device), no_agent, inner_model, beta=beta)  # reward: tensor [batch, 1]
+    reward_, rej_, length_ = get_reward(action, data.to(device), no_agent, inner_model, beta=beta, reward_type=reward_type)  # reward: tensor [batch, 1]
 
     # count assignment for each vehicle
     counts = []
@@ -98,6 +98,7 @@ if __name__ == '__main__':
     # n_nodes = [50]
     batch_size = 100
     beta = 100
+    reward_type = 'total'
     assignment_type = 'greedy'  # 'sampling', 'greedy', or 'k-means'
     k_means_cluster_type = 'spacial'  # 'temporal+spacial', or 'spacial'
     show_cluster = False
@@ -158,7 +159,7 @@ if __name__ == '__main__':
             data = testing_data[j].unsqueeze(0)
 
             # testing
-            obj, rej, length, cts, assign = test(policy, data, trained_worker, assignment_type, k_means_cluster_type, show_cluster, n_vehicles, beta, dev)
+            obj, rej, length, cts, assign = test(policy, data, trained_worker, assignment_type, k_means_cluster_type, show_cluster, n_vehicles, beta, reward_type, dev)
             objs.append(obj)
             rejs.append(rej)
             lengths.append(length)

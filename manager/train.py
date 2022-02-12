@@ -21,6 +21,7 @@ def train(hidden_dim,
           iterations,
           trained_worker,
           beta,
+          reward_type,
           device):
     # prepare validation data
     validation_data = torch.load(
@@ -56,7 +57,7 @@ def train(hidden_dim,
 
         # get reward for each batch
         reward, rejs, lengths = get_reward(action, data.to(device), no_agent, trained_worker,
-                                           beta)  # reward: tensor [batch, 1]
+                                           beta, reward_type=reward_type)  # reward: tensor [batch, 1]
         # compute loss
         loss = torch.mul(torch.tensor(reward, device=device) - 2, log_prob.sum(dim=1)).sum()
 
@@ -78,7 +79,7 @@ def train(hidden_dim,
         # validate and save best nets
         if (itr + 1) % 100 == 0:
             validation_loss, vali_rejs, vali_lengths = validate(validation_data, policy_net, no_agent, trained_worker,
-                                                                beta, device)
+                                                                beta, device, reward_type)
             print('Validation mean rej.rate:', format(sum(vali_rejs) / len(vali_rejs), '.4f'),
                   'Validation mean length:', format(sum(vali_lengths) / len(vali_lengths), '.4f'))
             vali_log.append(
@@ -118,6 +119,7 @@ if __name__ == '__main__':
     node_embedding_type = args.node_embedding_type
     hidden_dim = args.hidden_dim
     beta = args.beta
+    reward_type = 'total'
 
     print('Training device:', dev)
     print('Steps:', iteration)
@@ -164,5 +166,6 @@ if __name__ == '__main__':
                  'iteration,'
                  'worker_net,'
                  'beta,'
+                 'reward_type,'
                  'dev)',
                  filename='restats')

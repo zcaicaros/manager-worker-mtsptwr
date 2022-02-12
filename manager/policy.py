@@ -123,9 +123,9 @@ def test_learned_model(data, model, beta):
     return cost.item(), rej.item(), length.item()
 
 
-def get_reward(action, data, n_agent, validation_model, beta):
+def get_reward(action, data, n_agent, validation_model, beta, reward_type='minmax'):
 
-    subtour_max_cost = [0 for _ in range(data.shape[0])]
+    subtour_cost = [0 for _ in range(data.shape[0])]
     # log average rej.rate for batch
     subtour_rej = [0 for _ in range(data.shape[0])]
     # log average length for batch
@@ -152,13 +152,23 @@ def get_reward(action, data, n_agent, validation_model, beta):
                                                                              dtype=torch.float).unsqueeze(0),
                                                                 validation_model,
                                                                 beta=beta)
-            if sub_tour_cost >= subtour_max_cost[k]:
-                subtour_max_cost[k] = sub_tour_cost
+            if reward_type == 'minmax':
+                if sub_tour_cost >= subtour_cost[k]:
+                    subtour_cost[k] = sub_tour_cost
+                    # log rej.rate
+                    subtour_rej[k] = rej
+                    # log length
+                    subtour_len[k] = length
+            elif reward_type == 'total':
+                subtour_cost[k] += sub_tour_cost
                 # log rej.rate
-                subtour_rej[k] = rej
+                subtour_rej[k] += rej
                 # log length
-                subtour_len[k] = length
-    return subtour_max_cost, subtour_rej, subtour_len
+                subtour_len[k] += length
+            else:
+                raise RuntimeError('Not supported reward type, select form ["minmax", "total"]')
+
+    return subtour_cost, subtour_rej, subtour_len
 
 
 if __name__ == '__main__':
