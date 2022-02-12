@@ -86,17 +86,17 @@ def train(hidden_dim,
                 [format(sum(vali_rejs) / len(vali_rejs), '.6f'), format(sum(vali_lengths) / len(vali_lengths), '.6f')])
             if validation_loss < best_so_far:
                 best_so_far = validation_loss
-                torch.save(policy_net.state_dict(), '../trained_managers/{}_{}_{}_{}_{}_{}.pth'.format(
-                    beta, no_nodes, no_agent, vehicle_embd_type, node_mebd_type, hidden_dim))
+                torch.save(policy_net.state_dict(), '../trained_managers/{}_{}_{}_{}_{}_{}_{}.pth'.format(
+                    beta, no_nodes, no_agent, vehicle_embd_type, node_mebd_type, hidden_dim, reward_type))
                 print('Found better policy, and the validation loss is:', format(validation_loss, '.3f'))
                 validation_results.append(validation_loss)
             file_writing_obj1 = open(
-                './training_logs/' + 'itr_log_' + str(no_nodes) + '-' + str(
-                    no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '.txt', 'w')
+                './training_logs/training_log_{}_{}_{}_{}_{}_{}_{}.txt'.format(
+                    beta, no_nodes, no_agent, vehicle_embd_type, node_mebd_type, hidden_dim, reward_type), 'w')
             file_writing_obj1.write(str(itr_log))
             file_writing_obj2 = open(
-                './training_logs/' + 'vali_log_' + str(no_nodes) + '-' + str(
-                    no_agent) + '_' + vehicle_embd_type + '_' + node_mebd_type + '.txt', 'w')
+                './training_logs/validation_log_{}_{}_{}_{}_{}_{}_{}.txt'.format(
+                    beta, no_nodes, no_agent, vehicle_embd_type, node_mebd_type, hidden_dim, reward_type), 'w')
             file_writing_obj2.write(str(vali_log))
 
             print()
