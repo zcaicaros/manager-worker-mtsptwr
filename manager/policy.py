@@ -120,11 +120,12 @@ def action_greedy(pi):
 def test_learned_model(data, model, beta):
     with torch.no_grad():
         cost, _, rej, length, rej_count = model(data, beta=beta)
-        print(rej_count.item())
     return cost.item(), rej.item(), length.item(), rej_count.item()
 
 
 def get_reward(action, data, n_agent, validation_model, beta, reward_type='minmax'):
+
+    print(data.shape)
 
     cost = [0 for _ in range(data.shape[0])]
     # log average rej.rate for batch
