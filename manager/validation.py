@@ -6,7 +6,7 @@ from torch_geometric.data import Data
 from torch_geometric.data import Batch
 
 
-def validate(instances, p_net, no_agent, validation_model, beta, device, reward_type='total'):
+def validate(instances, p_net, no_agent, validation_model, beta, device, reward_type='overall'):
 
     batch_size = instances.shape[0]
     adj = torch.ones([batch_size, instances.shape[1], instances.shape[1]])  # adjacent matrix

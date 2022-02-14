@@ -120,19 +120,22 @@ def action_greedy(pi):
 def test_learned_model(data, model, beta):
     with torch.no_grad():
         cost, _, rej, length, rej_count = model(data, beta=beta)
-        print(rej_count)
-    return cost.item(), rej.item(), length.item()
+        print(rej_count.item())
+    return cost.item(), rej.item(), length.item(), rej_count.item()
 
 
 def get_reward(action, data, n_agent, validation_model, beta, reward_type='minmax'):
 
-    subtour_cost = [0 for _ in range(data.shape[0])]
+    cost = [0 for _ in range(data.shape[0])]
     # log average rej.rate for batch
     subtour_rej = [0 for _ in range(data.shape[0])]
     # log average length for batch
     subtour_len = [0 for _ in range(data.shape[0])]
-    # data = data * 1000
-    # depot = data[:, 0, :].tolist()
+    # number of rejected nodes for batch
+    total_rej_count = [0 for _ in range(data.shape[0])]
+    # total length for all vehicle
+    total_len = [0 for _ in range(data.shape[0])]
+
     sub_tours = [[[] for _ in range(n_agent)] for _ in range(data.shape[0])]
     for i in range(data.shape[0]):
         for n, m in zip(action.tolist()[i], data.tolist()[i][1:]):
@@ -148,28 +151,35 @@ def get_reward(action, data, n_agent, validation_model, beta, reward_type='minma
                 sub_tour_cost = 0
                 rej = 0
                 length = 0
+                rej_count = 0
             else:  # if sub-tour is not null, then evaluate it with pretrained model
-                sub_tour_cost, rej, length = test_learned_model(torch.tensor(instance, device=data.device,
-                                                                             dtype=torch.float).unsqueeze(0),
-                                                                validation_model,
-                                                                beta=beta)
+                sub_tour_cost, rej, length, rej_count = test_learned_model(
+                    torch.tensor(
+                        instance,
+                        device=data.device,
+                        dtype=torch.float).unsqueeze(0),
+                    validation_model,
+                    beta=beta
+                )
             if reward_type == 'minmax':
-                if sub_tour_cost >= subtour_cost[k]:
-                    subtour_cost[k] = sub_tour_cost
+                if sub_tour_cost >= cost[k]:
+                    cost[k] = sub_tour_cost
                     # log rej.rate
                     subtour_rej[k] = rej
                     # log length
                     subtour_len[k] = length
-            elif reward_type == 'total':
-                subtour_cost[k] += sub_tour_cost
-                # log rej.rate
-                subtour_rej[k] += rej
-                # log length
-                subtour_len[k] += length
+            elif reward_type == 'overall':
+                total_rej_count[k] += rej_count
+                total_len[k] += length
             else:
-                raise RuntimeError('Not supported reward type, select form ["minmax", "total"]')
-
-    return subtour_cost, subtour_rej, subtour_len
+                raise RuntimeError('Not supported reward type, select form ["minmax", "overall"]')
+    if reward_type == 'minmax':
+        return cost, subtour_rej, subtour_len
+    elif reward_type == 'overall':
+        avg_len = [l / data.shape[1] for l in total_len]
+        overall_rej = [(c/data.shape[1]) for c in total_rej_count]
+        cost = [beta * r + l for r, l in zip(overall_rej, avg_len)]
+        return cost, overall_rej, avg_len
 
 
 if __name__ == '__main__':

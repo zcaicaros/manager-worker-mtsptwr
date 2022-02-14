@@ -119,7 +119,7 @@ if __name__ == '__main__':
     node_embedding_type = args.node_embedding_type
     hidden_dim = args.hidden_dim
     beta = args.beta
-    reward_type = 'total'
+    reward_type = 'overall'
 
     print('Training device:', dev)
     print('Steps:', iteration)

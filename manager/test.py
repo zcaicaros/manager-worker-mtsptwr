@@ -98,7 +98,7 @@ if __name__ == '__main__':
     # n_nodes = [50]
     batch_size = 100
     beta = 100
-    reward_type = 'total'
+    reward_type = 'overall'
     assignment_type = 'greedy'  # 'sampling', 'greedy', or 'k-means'
     k_means_cluster_type = 'spacial'  # 'temporal+spacial', or 'spacial'
     show_cluster = False
