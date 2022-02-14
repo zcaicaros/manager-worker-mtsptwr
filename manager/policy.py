@@ -175,7 +175,7 @@ def get_reward(action, data, n_agent, validation_model, beta, reward_type='minma
     if reward_type == 'minmax':
         return cost, subtour_rej, subtour_len
     elif reward_type == 'overall':
-        avg_len = [l / data.shape[1] for l in total_len]
+        avg_len = [l/n_agent for l in total_len]
         overall_rej = [(c/data.shape[1]) for c in total_rej_count]
         cost = [beta * r + l for r, l in zip(overall_rej, avg_len)]
         return cost, overall_rej, avg_len
