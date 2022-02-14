@@ -8,8 +8,6 @@ from utils.tensor_functions import compute_in_batches
 
 from nets.graph_encoder import GraphAttentionEncoder
 from torch.nn import DataParallel
-from utils.beam_search import CachedLookup
-from utils.functions import sample_many
 
 
 def set_decode_type(model, decode_type):
@@ -89,14 +87,14 @@ class AttentionModel(nn.Module):
 
             # Special embedding projection for depot node
             self.init_embed_depot = nn.Linear(2, embedding_dim)
-            
+
             if self.is_vrp and self.allow_partial:  # Need to include the demand if split delivery allowed
                 self.project_node_step = nn.Linear(1, 3 * embedding_dim, bias=False)
         else:  # TSP
             assert problem.NAME == "tsp", "Unsupported problem: {}".format(problem.NAME)
             step_context_dim = 2 * embedding_dim  # Embedding of first and last node
             node_dim = 4  # x, y
-            
+
             # Learned input symbols for first action
             self.W_placeholder = nn.Parameter(torch.Tensor(2 * embedding_dim))
             self.W_placeholder.data.uniform_(-1, 1)  # Placeholder should be in range of activations
@@ -104,7 +102,7 @@ class AttentionModel(nn.Module):
         self.init_embed = nn.Linear(node_dim, embedding_dim)
 
         self.embedder = GraphAttentionEncoder(
-            n_heads=n_heads,            
+            n_heads=n_heads,
             embed_dim=embedding_dim,
             n_layers=self.n_encode_layers,
             normalization=normalization
@@ -137,57 +135,18 @@ class AttentionModel(nn.Module):
             embeddings, _ = self.embedder(self._init_embed(input))
 
         _log_p, pi = self._inner(input, embeddings)
-        
-        #rongkai added it for rejection
-        pi_,c,t = self.helper(input,pi)
-        
-        cost, mask, rej, length = self.problem.get_costs(input, pi_,c,t, beta)
+
+        # rongkai added it for rejection
+        pi_, c, t, rej_count = self.helper(input, pi)
+
+        cost, mask, rej, length = self.problem.get_costs(input, pi_, c, t, beta)
         # Log likelyhood is calculated within the model since returning it per action does not work well with
         # DataParallel since sequences can be of different lengths
         ll = self._calc_log_likelihood(_log_p, pi, mask)
         if return_pi:
             return cost, ll, pi
 
-        return cost, ll, rej, length
-
-    def beam_search(self, *args, **kwargs):
-        return self.problem.beam_search(*args, **kwargs, model=self)
-
-    def precompute_fixed(self, input):
-        embeddings, _ = self.embedder(self._init_embed(input))
-        # Use a CachedLookup such that if we repeatedly index this object with the same index we only need to do
-        # the lookup once... this is the case if all elements in the batch have maximum batch size
-        return CachedLookup(self._precompute(embeddings))
-
-    def propose_expansions(self, beam, fixed, expand_size=None, normalize=False, max_calc_batch_size=4096):
-        # First dim = batch_size * cur_beam_size
-        log_p_topk, ind_topk = compute_in_batches(
-            lambda b: self._get_log_p_topk(fixed[b.ids], b.state, k=expand_size, normalize=normalize),
-            max_calc_batch_size, beam, n=beam.size()
-        )
-
-        assert log_p_topk.size(1) == 1, "Can only have single step"
-        # This will broadcast, calculate log_p (score) of expansions
-        score_expand = beam.score[:, None] + log_p_topk[:, 0, :]
-
-        # We flatten the action as we need to filter and this cannot be done in 2d
-        flat_action = ind_topk.view(-1)
-        flat_score = score_expand.view(-1)
-        flat_feas = flat_score > -1e10  # != -math.inf triggers
-
-        # Parent is row idx of ind_topk, can be found by enumerating elements and dividing by number of columns
-        flat_parent = torch.arange(flat_action.size(-1), out=flat_action.new()) / ind_topk.size(-1)
-
-        # Filter infeasible
-        feas_ind_2d = torch.nonzero(flat_feas)
-
-        if len(feas_ind_2d) == 0:
-            # Too bad, no feasible expansions at all :(
-            return None, None, None
-
-        feas_ind = feas_ind_2d[:, 0]
-
-        return flat_parent[feas_ind], flat_action[feas_ind], flat_score[feas_ind]
+        return cost, ll, rej, length, rej_count
 
     def _calc_log_likelihood(self, _log_p, a, mask):
 
@@ -207,9 +166,9 @@ class AttentionModel(nn.Module):
 
         if self.is_vrp or self.is_orienteering or self.is_pctsp:
             if self.is_vrp:
-                features = ('demand', )
+                features = ('demand',)
             elif self.is_orienteering:
-                features = ('prize', )
+                features = ('prize',)
             else:
                 assert self.is_pctsp
                 features = ('deterministic_prize', 'penalty')
@@ -278,21 +237,6 @@ class AttentionModel(nn.Module):
 
         # Collected lists, return Tensor
         return torch.stack(outputs, 1), torch.stack(sequences, 1)
-
-    def sample_many(self, input, batch_rep=1, iter_rep=1, beta=100):
-        """
-        :param input: (batch_size, graph_size, node_dim) input node features
-        :return:
-        """
-        # Bit ugly but we need to pass the embeddings as well.
-        # Making a tuple will not work with the problem.get_cost function
-        return sample_many(
-            lambda input: self._inner(*input),  # Need to unpack tuple into arguments
-            lambda input, pi: self.evalhelper(input[0],pi),
-            lambda input, pi_, c,t: self.problem.get_costs(input[0], pi_,c,t, beta),  # Don't need embeddings as input to get_costs
-            (input, self.embedder(self._init_embed(input))[0]),  # Pack input with embeddings (additional input)
-            batch_rep, iter_rep
-        )
 
     def _select_node(self, probs, mask):
 
@@ -429,7 +373,7 @@ class AttentionModel(nn.Module):
                 -1
             )
         else:  # TSP
-        
+
             if num_steps == 1:  # We need to special case if we have only 1 step, may be the first or not
                 if state.i.item() == 0:
                     # First and only step, ignore prev_a (this is a placeholder)
@@ -437,7 +381,8 @@ class AttentionModel(nn.Module):
                 else:
                     return embeddings.gather(
                         1,
-                        torch.cat((state.first_a, current_node), 1)[:, :, None].expand(batch_size, 2, embeddings.size(-1))
+                        torch.cat((state.first_a, current_node), 1)[:, :, None].expand(batch_size, 2,
+                                                                                       embeddings.size(-1))
                     ).view(batch_size, 1, -1)
             # More than one step, assume always starting with first
             embeddings_per_step = embeddings.gather(
@@ -494,7 +439,6 @@ class AttentionModel(nn.Module):
     def _get_attention_node_data(self, fixed, state):
 
         if self.is_vrp and self.allow_partial:
-
             # Need to provide information of how much each node has already been served
             # Clone demands as they are needed by the backprop whereas they are updated later
             glimpse_key_step, glimpse_val_step, logit_key_step = \
@@ -515,52 +459,29 @@ class AttentionModel(nn.Module):
 
         return (
             v.contiguous().view(v.size(0), v.size(1), v.size(2), self.n_heads, -1)
-            .expand(v.size(0), v.size(1) if num_steps is None else num_steps, v.size(2), self.n_heads, -1)
-            .permute(3, 0, 1, 2, 4)  # (n_heads, batch_size, num_steps, graph_size, head_dim)
+                .expand(v.size(0), v.size(1) if num_steps is None else num_steps, v.size(2), self.n_heads, -1)
+                .permute(3, 0, 1, 2, 4)  # (n_heads, batch_size, num_steps, graph_size, head_dim)
         )
-        
-    def helper(self,dataset, pi):
-    
-        _pi = torch.cat([torch.zeros([pi.size(0),1],device=dataset.device),pi.float()+1],dim = 1)
-        pi_ = torch.zeros([pi.size(0),pi.size(1)+1],device=dataset.device)
-        depot = torch.tensor([[[0.5,0.5,0.0,0.0]]],device=dataset.device)
-        depot = depot.repeat(dataset.size(0),1,1)
-        dataset1 = torch.cat([depot,dataset], dim=1)
+
+    def helper(self, dataset, pi):
+
+        _pi = torch.cat([torch.zeros([pi.size(0), 1], device=dataset.device), pi.float() + 1], dim=1)
+        pi_ = torch.zeros([pi.size(0), pi.size(1) + 1], device=dataset.device)
+        depot = torch.tensor([[[0.5, 0.5, 0.0, 0.0]]], device=dataset.device)
+        depot = depot.repeat(dataset.size(0), 1, 1)
+        dataset1 = torch.cat([depot, dataset], dim=1)
         d = dataset1.gather(1, _pi.long().unsqueeze(-1).expand_as(dataset1))
-        n_steps = d.size(1)-1
-        t = torch.zeros([d.size(0),1],device=dataset.device)
-        ta = torch.zeros([d.size(0),1],device=dataset.device)
-        c = torch.zeros([d.size(0),1],device=dataset.device)
+        n_steps = d.size(1) - 1
+        t = torch.zeros([d.size(0), 1], device=dataset.device)
+        c = torch.zeros([d.size(0), 1], device=dataset.device)
         T = (dataset1[:, :, None, :2] - dataset1[:, None, :, :2]).norm(p=2, dim=-1)
         for i in range(n_steps):
-            ta = t + T[torch.arange(_pi.size(0)),pi_[:,i].long(),_pi[:,i+1].long(),None]
-            c = torch.where(ta<=dataset1[torch.arange(_pi.size(0)),_pi[:,i+1].long(),3,None],c,c+1)
-            pi_[:,i+1,None] = torch.where(ta<=dataset1[torch.arange(_pi.size(0)),_pi[:,i+1].long(),3,None],_pi[:,i+1,None],pi_[:,i,None])
-            t = torch.where(ta<=dataset1[torch.arange(_pi.size(0)),_pi[:,i+1].long(),3,None],ta,t)
-            t = torch.where(ta<=dataset1[torch.arange(_pi.size(0)),_pi[:,i+1].long(),3,None],torch.max(ta,dataset1[torch.arange(_pi.size(0)),_pi[:,i+1].long(),2,None]),t)
+            ta = t + T[torch.arange(_pi.size(0)), pi_[:, i].long(), _pi[:, i + 1].long(), None]
+            c = torch.where(ta <= dataset1[torch.arange(_pi.size(0)), _pi[:, i + 1].long(), 3, None], c, c + 1)
+            pi_[:, i + 1, None] = torch.where(ta <= dataset1[torch.arange(_pi.size(0)), _pi[:, i + 1].long(), 3, None],
+                                              _pi[:, i + 1, None], pi_[:, i, None])
+            t = torch.where(ta <= dataset1[torch.arange(_pi.size(0)), _pi[:, i + 1].long(), 3, None], ta, t)
+            t = torch.where(ta <= dataset1[torch.arange(_pi.size(0)), _pi[:, i + 1].long(), 3, None],
+                            torch.max(ta, dataset1[torch.arange(_pi.size(0)), _pi[:, i + 1].long(), 2, None]), t)
         pi_ = pi_.long()
-        c = c/pi.size(1)
-        return pi_,c,t
-    
-    def evalhelper(self, dataset, pi):
-        waitingtime = 0
-        _pi = torch.cat([torch.zeros([pi.size(0),1]),pi.float()+1],dim = 1)
-        pi_ = torch.zeros([pi.size(0),pi.size(1)+1])
-        depot = torch.tensor([[[0.5,0.5,0.0,0.0]]])
-        depot = depot.repeat(dataset.size(0),1,1)
-        dataset1 = torch.cat([depot,dataset], dim=1)
-        d = dataset1.gather(1, _pi.long().unsqueeze(-1).expand_as(dataset1))
-        n_steps = d.size(1)-1
-        t = torch.zeros([d.size(0),1])
-        ta = torch.zeros([d.size(0),1])
-        c = torch.zeros([d.size(0),1])
-        T = (dataset1[:, :, None, :2] - dataset1[:, None, :, :2]).norm(p=2, dim=-1)
-        for i in range(n_steps):
-            ta = t + T[torch.arange(_pi.size(0)),pi_[:,i].long(),_pi[:,i+1].long(),None]
-            c = torch.where(ta<=dataset1[torch.arange(_pi.size(0)),_pi[:,i+1].long(),3,None],c,c+1)
-            pi_[:,i+1,None] = torch.where(ta<=dataset1[torch.arange(_pi.size(0)),_pi[:,i+1].long(),3,None],_pi[:,i+1,None],pi_[:,i,None])
-            t = torch.where(ta<=dataset1[torch.arange(_pi.size(0)),_pi[:,i+1].long(),3,None],ta,t)
-            t = torch.where(ta<=dataset1[torch.arange(_pi.size(0)),_pi[:,i+1].long(),3,None],torch.max(ta,dataset1[torch.arange(_pi.size(0)),_pi[:,i+1].long(),2,None])+waitingtime,t)
-        pi_ = pi_.long()
-        c = c/pi.size(1)
-        return pi_,c,t
+        return pi_, c / pi.size(1), t, c

@@ -119,7 +119,7 @@ def action_greedy(pi):
 
 def test_learned_model(data, model, beta):
     with torch.no_grad():
-        cost, _, rej, length = model(data, beta=beta)
+        cost, _, rej, length, rej_count = model(data, beta=beta)
     return cost.item(), rej.item(), length.item()
 
 
