@@ -125,8 +125,6 @@ def test_learned_model(data, model, beta):
 
 def get_reward(action, data, n_agent, validation_model, beta, reward_type='minmax'):
 
-    print(data.shape)
-
     cost = [0 for _ in range(data.shape[0])]
     # log average rej.rate for batch
     subtour_rej = [0 for _ in range(data.shape[0])]
