@@ -127,7 +127,7 @@ if __name__ == '__main__':
             raise Exception('Your testing model not exist, please train it first')
 
         # load worker network
-        trained_worker = load_model('../trained_workers/beta_{}_tsptwr_{}.pt'.format(beta, int(n_nodes / n_agent)), dev)
+        trained_worker = load_model('../trained_workers/beta_{}_tsptwr_{}.pt'.format(beta, int(size / n_vehicles)), dev)
         trained_worker.eval()
         trained_worker.to(dev)
         trained_worker.decode_type = 'greedy'
