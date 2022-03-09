@@ -90,15 +90,14 @@ if __name__ == '__main__':
     torch.manual_seed(1)  # 1
 
     n_vehicles = 10
-    manager_size = [150, n_vehicles]
     sh_or_mh = 'MH'
-    node_embd_type = 'mlp'
+    node_embd_type = 'gin'
     hidden_dim = 32
-    n_nodes = [50, 100, 150, 200, 300, 400, 500]
-    # n_nodes = [50]
+    n_nodes = [100]  # [50, 100, 150, 200, 300, 400, 500]
+    net_node_size = 100
     batch_size = 100
     beta = 100
-    reward_type = 'overall'
+    reward_type = 'minmax'  # 'overall', 'minmax'
     assignment_type = 'greedy'  # 'sampling', 'greedy', or 'k-means'
     k_means_cluster_type = 'spacial'  # 'temporal+spacial', or 'spacial'
     show_cluster = False
@@ -114,12 +113,12 @@ if __name__ == '__main__':
 
     for size in n_nodes:
         print('Testing Problem of size: {}-{}'.format(size, n_vehicles))
-        print('Employed worker:', str(int(size / n_vehicles)), 'Employed Manager:', str(manager_size[0])+'-'+str(n_vehicles))
+        print('Employed worker:', str(int(size / n_vehicles)), 'Employed Manager:', str(size)+'-'+str(n_vehicles))
         print('Embedding type:', node_embd_type)
 
         # load manager network
-        path = Path('../trained_managers/{}_{}_{}_{}_{}_{}.pth'.format(
-            beta, size, n_vehicles, sh_or_mh, node_embd_type, hidden_dim))
+        path = Path('../trained_managers/{}_{}_{}_{}_{}_{}_{}.pth'.format(
+            beta, net_node_size, n_vehicles, sh_or_mh, node_embd_type, hidden_dim, reward_type))
         if path.is_file():
             policy.load_state_dict(torch.load(path))
             policy.eval()
@@ -146,6 +145,7 @@ if __name__ == '__main__':
         count_max = []
         count_min = []
         count_mean = []
+        cts = []
         for j in range(batch_size):
             # prepare random generated tesing data
             '''location = torch.rand(size=[1, size-1, 2])  # nodes - 1: locations without depot
@@ -168,9 +168,9 @@ if __name__ == '__main__':
             count_mean.append(sum(cts)/len(cts))
             # print('Instance', j, ':', 'rej.rate', format(rej, '.5f'), 'length:', format(length, '.5f'))
         end = time.time()
-        # np.save('./counts/count_max'+'_'+str(size)+'_'+str(n_vehicles), np.array(count_max))
-        # np.save('./counts/count_min'+'_'+str(size)+'_'+str(n_vehicles), np.array(count_min))
-        # np.save('./counts/count_mean' + '_' + str(size) + '_' + str(n_vehicles), np.array(count_mean))
+        np.save('./counts/count_max' + '_' + str(size) + '_' + str(n_vehicles) + '_' + reward_type, np.array(count_max))
+        np.save('./counts/count_min' + '_' + str(size) + '_' + str(n_vehicles) + '_' + reward_type, np.array(count_min))
+        np.save('./counts/count_mean' + '_' + str(size) + '_' + str(n_vehicles) + '_' + reward_type, np.array(count_mean))
         objs_per_seed.append(format(np.array(objs).mean(), '.5f'))
         rejs_per_seed.append(format(np.array(rejs).mean(), '.5f'))
         lengths_per_seed.append(format(np.array(lengths).mean(), '.5f'))
@@ -179,6 +179,7 @@ if __name__ == '__main__':
         print('Length:', lengths_per_seed)
         print('Cost:', objs_per_seed)
         print('Time(s):', (end - start)/batch_size)
+        # print('Number of served customers for each vehicle:\n', cts)
         print()
 
 
