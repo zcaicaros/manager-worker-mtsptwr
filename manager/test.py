@@ -102,9 +102,9 @@ if __name__ == '__main__':
     k_means_cluster_type = 'temporal+spacial'  # 'temporal+spacial', or 'spacial'
     show_cluster = False
 
-    for b in beta:
-        for size in n_nodes:
-            for m in n_vehicles:
+    for size in n_nodes:
+        for m in n_vehicles:
+            for b in beta:
 
                 # init manager net
                 policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_embd_type,
