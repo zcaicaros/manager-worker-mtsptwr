@@ -11,7 +11,7 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
 
-def test(model, dataset, inner_model, assgn_type, cluster_type, show_cluster, no_agent, beta, reward_type, device):
+def test(dataset, inner_model, assgn_type, cluster_type, show_cluster, no_agent, beta, reward_type, device, model=None):
     # to batch graph
     adj = torch.ones([dataset.shape[0], dataset.shape[1], dataset.shape[1]])  # adjacent matrix fully connected
     data_list = [Data(x=dataset[i], edge_index=torch.nonzero(adj[i], as_tuple=False).t(), as_tuple=False) for i in range(dataset.shape[0])]
@@ -20,25 +20,27 @@ def test(model, dataset, inner_model, assgn_type, cluster_type, show_cluster, no
     dataset_without_depot = dataset[:, 1:, :]
 
     # get pi
-    action = None
-    pi = model(batch_graph, n_nodes=data.shape[1], n_batch=dataset.shape[0])
-    if assgn_type == 'sampling':
-        action, _ = action_sample(pi)
-        # plot cluster
-        if show_cluster:
-            y_drl = action.squeeze().cpu().numpy()
-            points = dataset_without_depot[0]
-            plt.scatter(points[:, 0], points[:, 1], c=y_drl, s=50, cmap='viridis')
-            plt.show()
-    elif assgn_type == 'greedy':
-        action = action_greedy(pi)
-        # plot cluster
-        if show_cluster:
-            y_drl = action.squeeze().cpu().numpy()
-            # print(y_drl)
-            points = dataset_without_depot[0]
-            plt.scatter(points[:, 0], points[:, 1], c=y_drl, s=100, cmap='viridis')
-            plt.show()
+    if model is not None:
+        pi = model(batch_graph, n_nodes=data.shape[1], n_batch=dataset.shape[0])
+        if assgn_type == 'sampling':
+            action, _ = action_sample(pi)
+            # plot cluster
+            if show_cluster:
+                y_drl = action.squeeze().cpu().numpy()
+                points = dataset_without_depot[0]
+                plt.scatter(points[:, 0], points[:, 1], c=y_drl, s=50, cmap='viridis')
+                plt.show()
+        elif assgn_type == 'greedy':
+            action = action_greedy(pi)
+            # plot cluster
+            if show_cluster:
+                y_drl = action.squeeze().cpu().numpy()
+                # print(y_drl)
+                points = dataset_without_depot[0]
+                plt.scatter(points[:, 0], points[:, 1], c=y_drl, s=100, cmap='viridis')
+                plt.show()
+        else:
+            raise RuntimeError("Actions must be either sampled or greedy")
     else:
         kmeans_assgn = []
         if cluster_type == 'temporal+spacial':
@@ -105,81 +107,136 @@ if __name__ == '__main__':
     for size in n_nodes:
         for m in n_vehicles:
             for b in beta:
-
-                # init manager net
-                policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_embd_type,
-                                in_chnl=4, hid_chnl=hidden_dim, n_agent=m, key_size_embd=64,
-                                key_size_policy=64, val_size=64, clipping=10, dev=dev)
-
-                print('Testing Problem of size: {}-{} with batch size {}'.format(size, m, batch_size))
-                print('Employed worker: {} beta={}.'.format(int(size / m), b),
-                      'Employed Manager: {}-{} beta={}'.format(size, m, b))
-                print('Embedding type:', node_embd_type)
-
-                # load manager network
-                path = Path('../trained_managers/{}_{}_{}_{}_{}_{}_{}.pth'.format(
-                    b, net_node_size, m, sh_or_mh, node_embd_type, hidden_dim, reward_type))
-                if path.is_file():
-                    policy.load_state_dict(torch.load(path))
-                    policy.eval()
-                else:
-                    raise Exception('Your testing model not exist, please train it first')
-
                 # load worker network
                 trained_worker = load_model('../trained_workers/beta_{}_tsptwr_{}.pt'.format(b, int(size / m)), dev)
                 trained_worker.eval()
                 trained_worker.to(dev)
                 trained_worker.decode_type = 'greedy'
+                if reward_type in ['sampling', 'greedy']:
+                    # init manager net
+                    policy = Policy(vehicle_embd_type=sh_or_mh, node_embedding_type=node_embd_type,
+                                    in_chnl=4, hid_chnl=hidden_dim, n_agent=m, key_size_embd=64,
+                                    key_size_policy=64, val_size=64, clipping=10, dev=dev)
 
-                testing_data = torch.load(
-                    '../testing-instances/' + str(size) + '/testing_data_' + str(size) + '_' + str(100))
-                # print(testing_data[0][0])
-                objs_per_seed = []
-                rejs_per_seed = []
-                lengths_per_seed = []
+                    print('Testing Problem of size: {}-{} with batch size {}'.format(size, m, batch_size))
+                    print('Employed worker: {} beta={}.'.format(int(size / m), b),
+                          'Employed Manager: {}-{} beta={}'.format(size, m, b))
+                    print('Embedding type:', node_embd_type)
 
-                objs = []
-                rejs = []
-                lengths = []
-                start = time.time()
-                count_max = []
-                count_min = []
-                count_mean = []
-                cts = []
-                for j in range(batch_size):
-                    # prepare random generated tesing data
-                    '''location = torch.rand(size=[1, size-1, 2])  # nodes - 1: locations without depot
-                    win_start = 3 * torch.rand(size=[1, size-1, 1])  # nodes - 1: start time without depot
-                    win_end = 3 + win_start
-                    location_with_tw = torch.cat([location, win_start, win_end], dim=-1)  # locations+tw without depot
-                    depot = torch.tensor([0.5, 0.5, 0, 10], dtype=torch.float).repeat(1, 1, 1)  # constant depot
-                    data = torch.cat([depot, location_with_tw], dim=1)  # final instances with depot'''
+                    # load manager network
+                    path = Path('../trained_managers/{}_{}_{}_{}_{}_{}_{}.pth'.format(
+                        b, net_node_size, m, sh_or_mh, node_embd_type, hidden_dim, reward_type))
+                    if path.is_file():
+                        policy.load_state_dict(torch.load(path))
+                        policy.eval()
+                    else:
+                        raise Exception('Your testing model not exist, please train it first')
 
-                    # use preloaded testing data
-                    data = testing_data[j].unsqueeze(0)
+                    testing_data = torch.load(
+                        '../testing-instances/' + str(size) + '/testing_data_' + str(size) + '_' + str(100))
+                    # print(testing_data[0][0])
+                    objs_per_seed = []
+                    rejs_per_seed = []
+                    lengths_per_seed = []
 
-                    # testing
-                    obj, rej, length, cts, assign = test(policy, data, trained_worker, assignment_type, k_means_cluster_type, show_cluster, m, b, reward_type, dev)
-                    objs.append(obj)
-                    rejs.append(rej)
-                    lengths.append(length)
-                    count_max.append(max(cts))
-                    count_min.append(min(cts))
-                    count_mean.append(sum(cts)/len(cts))
-                    # print('Instance', j, ':', 'rej.rate', format(rej, '.5f'), 'length:', format(length, '.5f'))
-                end = time.time()
-                # np.save('./counts/count_max' + '_' + str(size) + '_' + str(n_vehicles) + '_' + reward_type, np.array(count_max))
-                # np.save('./counts/count_min' + '_' + str(size) + '_' + str(n_vehicles) + '_' + reward_type, np.array(count_min))
-                # np.save('./counts/count_mean' + '_' + str(size) + '_' + str(n_vehicles) + '_' + reward_type, np.array(count_mean))
-                objs_per_seed.append(format(np.array(objs).mean(), '.5f'))
-                rejs_per_seed.append(format(np.array(rejs).mean(), '.5f'))
-                lengths_per_seed.append(format(np.array(lengths).mean(), '.5f'))
-                print('Rej.rate:', rejs_per_seed)
-                print('Length:', lengths_per_seed)
-                print('Cost:', objs_per_seed)
-                print('Time(s):', (end - start)/batch_size)
-                # print('Number of served customers for each vehicle:\n', cts)
-                print()
+                    objs = []
+                    rejs = []
+                    lengths = []
+                    start = time.time()
+                    count_max = []
+                    count_min = []
+                    count_mean = []
+                    cts = []
+                    for j in range(batch_size):
+                        # prepare random generated tesing data
+                        '''location = torch.rand(size=[1, size-1, 2])  # nodes - 1: locations without depot
+                        win_start = 3 * torch.rand(size=[1, size-1, 1])  # nodes - 1: start time without depot
+                        win_end = 3 + win_start
+                        location_with_tw = torch.cat([location, win_start, win_end], dim=-1)  # locations+tw without depot
+                        depot = torch.tensor([0.5, 0.5, 0, 10], dtype=torch.float).repeat(1, 1, 1)  # constant depot
+                        data = torch.cat([depot, location_with_tw], dim=1)  # final instances with depot'''
+
+                        # use preloaded testing data
+                        data = testing_data[j].unsqueeze(0)
+
+                        # testing
+                        obj, rej, length, cts, assign = test(policy, data, trained_worker, assignment_type, k_means_cluster_type, show_cluster, m, b, reward_type, dev)
+                        objs.append(obj)
+                        rejs.append(rej)
+                        lengths.append(length)
+                        count_max.append(max(cts))
+                        count_min.append(min(cts))
+                        count_mean.append(sum(cts)/len(cts))
+                        # print('Instance', j, ':', 'rej.rate', format(rej, '.5f'), 'length:', format(length, '.5f'))
+                    end = time.time()
+                    # np.save('./counts/count_max' + '_' + str(size) + '_' + str(n_vehicles) + '_' + reward_type, np.array(count_max))
+                    # np.save('./counts/count_min' + '_' + str(size) + '_' + str(n_vehicles) + '_' + reward_type, np.array(count_min))
+                    # np.save('./counts/count_mean' + '_' + str(size) + '_' + str(n_vehicles) + '_' + reward_type, np.array(count_mean))
+                    objs_per_seed.append(format(np.array(objs).mean(), '.5f'))
+                    rejs_per_seed.append(format(np.array(rejs).mean(), '.5f'))
+                    lengths_per_seed.append(format(np.array(lengths).mean(), '.5f'))
+                    print('Rej.rate:', rejs_per_seed)
+                    print('Length:', lengths_per_seed)
+                    print('Cost:', objs_per_seed)
+                    print('Time(s):', (end - start)/batch_size)
+                    # print('Number of served customers for each vehicle:\n', cts)
+                    print()
+                else:
+                    print('Testing Problem of size: {}-{} with batch size {}'.format(size, m, batch_size))
+                    print('Employed worker: {} beta={}.'.format(int(size / m), b),
+                          'Employed Manager: KMeans with cluster type {}.'.format(k_means_cluster_type))
+
+                    testing_data = torch.load(
+                        '../testing-instances/' + str(size) + '/testing_data_' + str(size) + '_' + str(100))
+                    # print(testing_data[0][0])
+                    objs_per_seed = []
+                    rejs_per_seed = []
+                    lengths_per_seed = []
+
+                    objs = []
+                    rejs = []
+                    lengths = []
+                    start = time.time()
+                    count_max = []
+                    count_min = []
+                    count_mean = []
+                    cts = []
+                    for j in range(batch_size):
+                        # prepare random generated tesing data
+                        '''location = torch.rand(size=[1, size-1, 2])  # nodes - 1: locations without depot
+                        win_start = 3 * torch.rand(size=[1, size-1, 1])  # nodes - 1: start time without depot
+                        win_end = 3 + win_start
+                        location_with_tw = torch.cat([location, win_start, win_end], dim=-1)  # locations+tw without depot
+                        depot = torch.tensor([0.5, 0.5, 0, 10], dtype=torch.float).repeat(1, 1, 1)  # constant depot
+                        data = torch.cat([depot, location_with_tw], dim=1)  # final instances with depot'''
+
+                        # use preloaded testing data
+                        data = testing_data[j].unsqueeze(0)
+
+                        # testing
+                        obj, rej, length, cts, assign = test(data, trained_worker, assignment_type,
+                                                             k_means_cluster_type, show_cluster, m, b, reward_type, dev)
+                        objs.append(obj)
+                        rejs.append(rej)
+                        lengths.append(length)
+                        count_max.append(max(cts))
+                        count_min.append(min(cts))
+                        count_mean.append(sum(cts) / len(cts))
+                        # print('Instance', j, ':', 'rej.rate', format(rej, '.5f'), 'length:', format(length, '.5f'))
+                    end = time.time()
+                    # np.save('./counts/count_max' + '_' + str(size) + '_' + str(n_vehicles) + '_' + reward_type, np.array(count_max))
+                    # np.save('./counts/count_min' + '_' + str(size) + '_' + str(n_vehicles) + '_' + reward_type, np.array(count_min))
+                    # np.save('./counts/count_mean' + '_' + str(size) + '_' + str(n_vehicles) + '_' + reward_type, np.array(count_mean))
+                    objs_per_seed.append(format(np.array(objs).mean(), '.5f'))
+                    rejs_per_seed.append(format(np.array(rejs).mean(), '.5f'))
+                    lengths_per_seed.append(format(np.array(lengths).mean(), '.5f'))
+                    print('Rej.rate:', rejs_per_seed)
+                    print('Length:', lengths_per_seed)
+                    print('Cost:', objs_per_seed)
+                    print('Time(s):', (end - start) / batch_size)
+                    # print('Number of served customers for each vehicle:\n', cts)
+                    print()
+
 
 
 
