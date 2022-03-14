@@ -22,7 +22,7 @@ ax1.set_xlim([10, 100])
 ax1.set_ylim([4, 5.5])
 ax2.set_ylim([0, 1])
 
-ax1.set_xlabel('Beta', {'family': 'Times New Roman', 'weight': 'bold', 'size': 40})
+ax1.set_xlabel(r'$\beta$', {'family': 'Times New Roman', 'weight': 'bold', 'size': 40})
 ax1.set_ylabel("Tour Length", {'family': 'Times New Roman', 'weight': 'bold', 'size': 40})
 ax2.set_ylabel("Rejection Rate (%)", {'family': 'Times New Roman', 'weight': 'bold', 'size': 40})
 # ax1.set_xlabel("Instance ID", fontsize=12)
