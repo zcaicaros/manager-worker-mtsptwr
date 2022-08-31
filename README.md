@@ -1,5 +1,23 @@
 # Learning to Solve Multiple-TSP with Time Window and Rejection via Deep Reinforcement Learning
 
+
+This repository is the official PyTorch implementation of the algorithms in the following paper: 
+
+Rongkai Zhang, Cong Zhang, Zhiguang Cao, Wen Song, Puay Siew Tan, Jie Zhang, Bihan Wen, and Justin Dauwels. Learning to Solve Multiple-TSP with Time Window and Rejection via Deep Reinforcement Learning. IEEE Transactions on Intelligent Transportation Systems, 2021. [\[PDF\]](pending)
+
+
+If you make use of the code in your work, please cite our paper:
+```
+@inproceedings{NEURIPS2020_11958dfe,
+ title = {Learning to Solve Multiple-TSP with Time Window and Rejections via Deep Reinforcement Learning},
+ author = {Zhang, Rongkai and Zhang, Cong and Cao, Zhiguang and Song, Wen and Tan, Puay Siew and Zhang, Jie and Bihan, Wen and Dauwels, Justin},
+ booktitle = {IEEE Transactions on Intelligent Transportation Systems},
+ year = {2021},
+}
+```
+
+If you have any issues running the code, please let me know.
+
 ## Requirement
 Ubuntu 20.04 LTS 
 
@@ -39,3 +57,24 @@ Create container `manager-worker-mtsptwr_container` from `manager-worker-mtsptwr
 ```commandline
 sudo docker run --gpus all --name manager-worker-mtsptwr-container -it manager-worker-mtsptwr-image
 ```
+
+## Training the model
+Change parameters type in ```./manager/parameters.py``` file and run:
+```
+cd ./manager/
+python3 train.py
+```
+
+In this repo, we have provided the trained worker with different sizes, stored in ```./trained/workers```
+
+If you want to train the worker with different sizes, please refer to [code](pending) and [paper](https://ieeexplore.ieee.org/abstract/document/9207026/).
+
+## Testing the model
+run:
+```
+cd ./manager/
+python3 test.py
+```
+
+The parameters for testing is in ```./manager/test.py```. You can adjust accordingly.
+
