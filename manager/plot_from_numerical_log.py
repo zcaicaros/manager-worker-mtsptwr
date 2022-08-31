@@ -13,6 +13,8 @@ hidden_dim = 32
 beta = 100
 reward_type = 'total'
 anchor_box_font_size = 30
+save = False
+dpi = 100
 
 if plot_individual:
     path = './training_logs/'
@@ -59,7 +61,7 @@ if plot_individual:
                 verticalalignment='top', bbox=props)
         plt.plot(x, rej, 'k', color='tab:blue')
         plt.tight_layout()
-        plt.savefig('../paper_figure/{}.pdf'.format(str(size)+'-'+str(vehicles)+'-'+'rej'), dpi=100)
+        plt.savefig('../paper_figure/{}.pdf'.format(str(size)+'-'+str(vehicles)+'-'+'rej'), dpi=dpi)
         plt.show()
 
         # len curve
@@ -78,7 +80,7 @@ if plot_individual:
                 verticalalignment='top', bbox=props)
         plt.plot(x, length, 'k', color='tab:blue')
         plt.tight_layout()
-        plt.savefig('../paper_figure/{}.pdf'.format(str(size) + '-' + str(vehicles) + '-' + 'len'), dpi=100)
+        plt.savefig('../paper_figure/{}.pdf'.format(str(size) + '-' + str(vehicles) + '-' + 'len'), dpi=dpi)
         plt.show()
     else:
         cost = log_arr[:, 0]
@@ -104,7 +106,7 @@ if plot_individual:
                 verticalalignment='top', bbox=props)
         plt.plot(x, rej, 'k', color='tab:blue')
         plt.tight_layout()
-        plt.savefig('../paper_figure/{}.pdf'.format(str(size) + '-' + str(vehicles) + '-' + 'rej'), dpi=100)
+        plt.savefig('../paper_figure/{}.pdf'.format(str(size) + '-' + str(vehicles) + '-' + 'rej'), dpi=dpi)
         plt.show()
 
         # len curve
@@ -123,7 +125,7 @@ if plot_individual:
                 verticalalignment='top', bbox=props)
         plt.plot(x, length, 'k', color='tab:blue')
         plt.tight_layout()
-        plt.savefig('../paper_figure/{}.pdf'.format(str(size) + '-' + str(vehicles) + '-' + 'len'), dpi=100)
+        plt.savefig('../paper_figure/{}.pdf'.format(str(size) + '-' + str(vehicles) + '-' + 'len'), dpi=dpi)
         plt.show()
 else:
     n_set = [50, 100, 150]
@@ -134,7 +136,8 @@ else:
     if log_type == 'train':
         for n in n_set:
             for m in m_set:
-                f = open(path + 'itr_log_' + str(n) + '-' + str(m) + '_' + sh_or_mh + '.txt', 'r')
+                f = open('./training_logs/training_log_{}_{}_{}_{}_{}_{}_{}.txt'.format(
+                    beta, n, m, sh_or_mh, node_embedding_type, hidden_dim, reward_type), 'r')
                 logs = f.readlines()
                 training_log = []
                 validation_log = []
@@ -144,7 +147,8 @@ else:
     else:
         for n in n_set:
             for m in m_set:
-                f = open(path + 'vali_log_' + str(n) + '-' + str(m) + '_' + sh_or_mh + '.txt', 'r')
+                f = open('./training_logs/validation_log_{}_{}_{}_{}_{}_{}_{}.txt'.format(
+                    beta, n, m, sh_or_mh, node_embedding_type, hidden_dim, reward_type), 'r')
                 logs = f.readlines()
                 training_log = []
                 validation_log = []
@@ -161,7 +165,7 @@ else:
         # rej curve
         plt.figure(figsize=(16, 11.6))
         plt.tick_params(labelsize=30)
-        plt.xlabel('Every 100 iterations', {'size': 40})
+        plt.xlabel('Every dpi iterations', {'size': 40})
         plt.ylabel('Rej.Rate', {'size': 40})
         plt.grid()
         plt.plot(x, rej[0], 'k', color='tab:blue', label='n=' + str(n_set[0]) + ', ' + 'm=' + str(m_set[0]))
@@ -172,7 +176,7 @@ else:
         plt.plot(x, rej[5], 'k', color='tab:orange', label='n=' + str(n_set[2]) + ', ' + 'm=' + str(m_set[1]))
         plt.tight_layout()
         plt.legend(fontsize=anchor_box_font_size)
-        plt.savefig('../paper_figure/{}.pdf'.format('vali_rej_all_in_one'), dpi=100)
+        plt.savefig('../paper_figure/{}.pdf'.format('vali_rej_all_in_one'), dpi=dpi)
         plt.show()
 
         # len curve
@@ -206,7 +210,8 @@ else:
         plt.plot(x, cost[4], 'k', color='tab:purple', label='n=' + str(n_set[2]) + ', ' + 'm=' + str(m_set[0]))
         plt.plot(x, cost[5], 'k', color='tab:orange', label='n=' + str(n_set[2]) + ', ' + 'm=' + str(m_set[1]))
         plt.legend(fontsize=anchor_box_font_size)
-        plt.savefig('../paper_figure/{}.pdf'.format('vali_cost_all_in_one'), dpi=100)
+        if save:
+            plt.savefig('../paper_figure/{}.pdf'.format('vali_cost_all_in_one'), dpi=100)
         plt.show()
     else:
         cost = log_arr_all[:, :, 0]
@@ -228,7 +233,7 @@ else:
         plt.plot(x, rej[5], 'k', color='tab:orange', label='n=' + str(n_set[2]) + ', ' + 'm=' + str(m_set[1]))
         plt.tight_layout()
         plt.legend(fontsize=anchor_box_font_size)
-        plt.savefig('../paper_figure/{}.pdf'.format('train_rej_all_in_one'), dpi=100)
+        plt.savefig('../paper_figure/{}.pdf'.format('train_rej_all_in_one'), dpi=dpi)
         plt.show()
 
         # len curve
@@ -245,7 +250,7 @@ else:
         plt.plot(x, length[5], 'k', color='tab:orange', label='n=' + str(n_set[2]) + ', ' + 'm=' + str(m_set[1]))
         plt.tight_layout()
         plt.legend(fontsize=anchor_box_font_size)
-        plt.savefig('../paper_figure/{}.pdf'.format('train_len_all_in_one'), dpi=100)
+        plt.savefig('../paper_figure/{}.pdf'.format('train_len_all_in_one'), dpi=dpi)
         plt.show()
 
         # cost curve
@@ -262,5 +267,6 @@ else:
         plt.plot(x, cost[5], 'k', color='tab:orange', label='n=' + str(n_set[2]) + ', ' + 'm=' + str(m_set[1]))
         plt.tight_layout()
         plt.legend(fontsize=anchor_box_font_size)
-        plt.savefig('../paper_figure/{}.pdf'.format('train_cost_all_in_one'), dpi=100)
+        if save:
+            plt.savefig('../paper_figure/{}.pdf'.format('train_cost_all_in_one'), dpi=dpi)
         plt.show()
