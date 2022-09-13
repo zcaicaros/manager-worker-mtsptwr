@@ -6,7 +6,7 @@ This repository is the official PyTorch implementation of the algorithms in the 
 Rongkai Zhang, Cong Zhang, Zhiguang Cao, Wen Song, Puay Siew Tan, Jie Zhang, Bihan Wen, and Justin Dauwels. Learning to Solve Multiple-TSP with Time Window and Rejection via Deep Reinforcement Learning. IEEE Transactions on Intelligent Transportation Systems, 2022. [\[PDF\]](pending)
 
 
-If you make use of the code in your work, please cite our paper:
+Paper reference:
 ```
 @article{manager_worker,
  title = {Learning to Solve Multiple-TSP with Time Window and Rejections via Deep Reinforcement Learning},
