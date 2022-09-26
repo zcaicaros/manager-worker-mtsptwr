@@ -8,12 +8,15 @@ Rongkai Zhang, Cong Zhang, Zhiguang Cao, Wen Song, Puay Siew Tan, Jie Zhang, Bih
 
 Paper reference:
 ```
-@article{manager_worker,
- title = {Learning to Solve Multiple-TSP with Time Window and Rejections via Deep Reinforcement Learning},
- author = {Zhang, Rongkai and Zhang, Cong and Cao, Zhiguang and Song, Wen and Tan, Puay Siew and Zhang, Jie and Bihan, Wen and Dauwels, Justin},
- journal = {IEEE Transactions on Intelligent Transportation Systems},
- year = {2022},
-}
+@ARTICLE{9901466,
+  author={Zhang, Rongkai and Zhang, Cong and Cao, Zhiguang and Song, Wen and Tan, Puay Siew and Zhang, Jie and Wen, Bihan and Dauwels, Justin},
+  journal={IEEE Transactions on Intelligent Transportation Systems}, 
+  title={Learning to Solve Multiple-TSP With Time Window and Rejections via Deep Reinforcement Learning}, 
+  year={2022},
+  volume={},
+  number={},
+  pages={1-12},
+  doi={10.1109/TITS.2022.3207011}}
 ```
 
 If you have any issues running the code, please let me know.
